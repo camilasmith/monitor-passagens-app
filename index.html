@@ -108,21 +108,21 @@
                 
                 <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Alianças Aéreas</h3>
                 <div id="alliances-info" class="space-y-2 text-sm mb-6">
-                    </div>
+                </div>
 
                 <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Emissões Tabela Fixa</h3>
                 <div id="fixed-table-info" class="space-y-2 text-sm mb-6">
-                    </div>
+                </div>
 
                 <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Programas de Hotéis</h3>
                 <div id="hotel-programs-info" class="space-y-2 text-sm">
-                    </div>
+                </div>
             </div>
             
             <div class="mt-6 border-t border-slate-200 dark:border-slate-700 pt-6 flex-shrink-0">
                 <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Cotação do Milheiro</h3>
                 <div id="miles-quotation" class="space-y-2 text-sm">
-                    </div>
+                </div>
             </div>
         </aside>
 
@@ -141,20 +141,20 @@
             </header>
 
             <div id="region-tabs" class="mb-6 border-b border-slate-200 dark:border-slate-700 overflow-x-auto whitespace-nowrap">
-                </div>
+            </div>
 
             <div id="page-dashboard" class="page">
                 <header class="hidden lg:flex justify-between items-center mb-6">
                     <h2 class="text-3xl font-bold text-slate-900 dark:text-white">Oportunidades em Tempo Real</h2>
                     <div class="flex items-center gap-2">
                         <span class="relative flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span></span>
-                        <span class="text-sm text-green-400">Buscando...</span>
+                        <span id="status-text" class="text-sm text-green-400">Buscando...</span>
                     </div>
                 </header>
                 <div id="feed" class="space-y-6">
                     </div>
                 <div id="premium-feed" class="space-y-6 hidden">
-                    </div>
+                </div>
                 <div id="hotel-feed" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 hidden">
                     <p class="text-center text-slate-500 pt-16 col-span-full">Aguardando as primeiras oportunidades de hotéis...</p>
                 </div>
@@ -166,7 +166,7 @@
                     <p class="text-sm text-slate-500 dark:text-slate-400">Promoções ativas dos últimos 10 dias</p>
                 </header>
                 <div id="history-feed" class="space-y-6">
-                    </div>
+                </div>
             </div>
         </main>
     </div>
@@ -198,19 +198,16 @@
         let activeRegion = 'Todos';
 
         // --- DADOS E CONFIGURAÇÕES ---
-        const API_BASE_URL = 'https://monitor-passagens-server.onrender.com'; // URL final do servidor no Render
+        const API_BASE_URL = 'https://monitor-passagens-server.onrender.com';
 
         const airlines = [ { name: 'TAP Air Portugal', domain: 'flytap.com', alliance: 'Star Alliance', loyaltyProgram: 'Miles&Go', avgMilePrice: 35.00 }, { name: 'United Airlines', domain: 'united.com', alliance: 'Star Alliance', loyaltyProgram: 'MileagePlus', avgMilePrice: 70.00 }, { name: 'Copa Airlines', domain: 'copaair.com', alliance: 'Star Alliance', loyaltyProgram: 'ConnectMiles', avgMilePrice: 65.00 }, { name: 'Lufthansa', domain: 'lufthansa.com', alliance: 'Star Alliance', loyaltyProgram: 'Miles & More', avgMilePrice: 70.00 }, { name: 'Avianca', domain: 'avianca.com', alliance: 'Star Alliance', loyaltyProgram: 'LifeMiles', avgMilePrice: 60.00 }, { name: 'Delta Air Lines', domain: 'delta.com', alliance: 'SkyTeam', loyaltyProgram: 'SkyMiles', avgMilePrice: 70.00 }, { name: 'Air France', domain: 'airfrance.com', alliance: 'SkyTeam', loyaltyProgram: 'Flying Blue', avgMilePrice: 70.00 }, { name: 'KLM', domain: 'klm.com', alliance: 'SkyTeam', loyaltyProgram: 'Flying Blue', avgMilePrice: 70.00 }, { name: 'Aeromexico', domain: 'aeromexico.com', alliance: 'SkyTeam', loyaltyProgram: 'Club Premier', avgMilePrice: 65.00 }, { name: 'American Airlines', domain: 'aa.com', alliance: 'Oneworld', loyaltyProgram: 'AAdvantage', avgMilePrice: 70.00 }, { name: 'Iberia', domain: 'iberia.com', alliance: 'Oneworld', loyaltyProgram: 'Iberia Plus', avgMilePrice: 70.00 }, { name: 'British Airways', domain: 'ba.com', alliance: 'Oneworld', loyaltyProgram: 'Executive Club', avgMilePrice: 70.00 }, { name: 'GOL', domain: 'voegol.com.br', alliance: 'N/A', loyaltyProgram: 'Smiles', avgMilePrice: 20.00 }, { name: 'LATAM', domain: 'latam.com', alliance: 'N/A', loyaltyProgram: 'LATAM Pass', avgMilePrice: 25.00 }, { name: 'Azul', domain: 'voeazul.com.br', alliance: 'N/A', loyaltyProgram: 'TudoAzul', avgMilePrice: 23.00 }, ];
         const partners = [ { name: 'Livelo', logo: 'credit-card', color: 'text-red-400' }, { name: 'Smiles', logo: 'smile', color: 'text-orange-400' }, { name: 'TudoAzul', logo: 'cloud', color: 'text-blue-400' }, { name: 'LATAM Pass', logo: 'star', color: 'text-indigo-400' }, { name: 'Esfera', logo: 'circle', color: 'text-red-600'} ];
         const airports = [ { code: 'GRU', city: 'São Paulo', country: 'BR', region: 'Sudeste' }, { code: 'GIG', city: 'Rio de Janeiro', country: 'BR', region: 'Sudeste' }, { code: 'CNF', city: 'Belo Horizonte', country: 'BR', region: 'Sudeste' }, { code: 'VCP', city: 'Campinas', country: 'BR', region: 'Sudeste' }, { code: 'SDU', city: 'Rio de Janeiro', country: 'BR', region: 'Sudeste' }, { code: 'POA', city: 'Porto Alegre', country: 'BR', region: 'Sul' }, { code: 'REC', city: 'Recife', country: 'BR', region: 'Nordeste' }, { code: 'SSA', city: 'Salvador', country: 'BR', region: 'Nordeste' }, { code: 'FOR', city: 'Fortaleza', country: 'BR', region: 'Nordeste' }, { code: 'JPA', city: 'João Pessoa', country: 'BR', region: 'Nordeste' }, { code: 'BSB', city: 'Brasília', country: 'BR', region: 'Centro-Oeste' }, { code: 'MIA', city: 'Miami', country: 'US', continent: 'América do Norte' }, { code: 'LIS', city: 'Lisboa', country: 'PT', continent: 'Europa' }, { code: 'CDG', city: 'Paris', country: 'FR', continent: 'Europa' }, { code: 'MCO', city: 'Orlando', country: 'US', continent: 'América do Norte' }, { code: 'FLL', city: 'Fort Lauderdale', country: 'US', continent: 'América do Norte' }, { code: 'JFK', city: 'Nova Iorque', country: 'US', continent: 'América do Norte' }, { code: 'MAD', city: 'Madrid', country: 'ES', continent: 'Europa' }, { code: 'EZE', city: 'Buenos Aires', country: 'AR', continent: 'América do Sul' }, ];
-        const tabList = ['Todos', 'Premium', 'Sudeste', 'Sul', 'Nordeste', 'Centro-Oeste', 'América do Norte', 'Europa', 'América do Sul', 'Hotéis'];
-        const alliances = { 'Star Alliance': ['TAP Air Portugal', 'United Airlines', 'Copa Airlines', 'Lufthansa', 'Avianca'], 'SkyTeam': ['Delta Air Lines', 'Air France', 'KLM', 'Aeromexico'], 'Oneworld': ['American Airlines', 'Iberia', 'British Airways'] };
-        const fixedTablePrograms = [ 'Iberia Plus (Avios)', 'LATAM Pass (voos LATAM)', 'Smiles (voos GOL/Aerolineas)', 'Flying Blue (Europa/Caribe)' ];
-        const hotelProgramsInfo = [ { name: 'ALL Accor', partners: ['Livelo', 'Smiles', 'TudoAzul'], avgPointPrice: 100 }, { name: 'Hilton Honors', partners: ['American Express'], avgPointPrice: 25 }, { name: 'IHG One Rewards', partners: ['Livelo'], avgPointPrice: 30 }, { name: 'Choice Privileges', partners: ['Livelo'], avgPointPrice: 35 } ];
-        const hotels = [ { name: 'Pullman Ibirapuera', city: 'São Paulo', program: 'ALL Accor'}, { name: 'Hilton Barra', city: 'Rio de Janeiro', program: 'Hilton Honors'}, { name: 'InterContinental', city: 'Paris', program: 'IHG One Rewards'}, { name: 'Sofitel Lisbon', city: 'Lisboa', program: 'ALL Accor'} ];
-
+        
         // --- FUNÇÕES DE BUSCA DE DADOS REAIS ---
         async function fetchRealPromotions(origin, destination) {
+            const statusText = document.getElementById('status-text');
+            statusText.textContent = 'Buscando...';
             try {
                 const today = new Date().toISOString().split('T')[0];
                 const response = await fetch(`${API_BASE_URL}/api/search-flights?origin=${origin}&destination=${destination}&departureDate=${today}`);
@@ -219,17 +216,21 @@
                 }
                 const offers = await response.json();
                 
-                offers.forEach(offer => {
-                    const promoData = mapApiDataToPromo(offer);
-                    if(promoData) {
-                        allPromotions.push(promoData);
-                        displayPromotion(promoData);
-                    }
-                });
-
-            } catch (error)
-            {
+                if (offers.length === 0) {
+                    statusText.textContent = 'Nenhuma oferta encontrada.';
+                } else {
+                    offers.forEach(offer => {
+                        const promoData = mapApiDataToPromo(offer);
+                        if(promoData) {
+                            displayPromotion(promoData);
+                        }
+                    });
+                    statusText.textContent = 'Busca concluída!';
+                }
+                console.log("Ofertas recebidas:", offers);
+            } catch (error) {
                 console.error("Falha ao buscar promoções reais:", error);
+                statusText.textContent = 'Erro na busca.';
             }
         }
         
@@ -239,40 +240,79 @@
             const originData = airports.find(a => a.code === apiOffer.origin) || { code: apiOffer.origin, city: 'Desconhecida', country: 'N/A', region: 'Outros' };
             const destinationData = airports.find(a => a.code === apiOffer.destination) || { code: apiOffer.destination, city: 'Desconhecida', country: 'N/A', continent: 'Outros'};
             
-            const isMonitored = monitoredRoutes.some(r => (r.origin === originData.code && r.destination === destinationData.code));
-            const availableDates = [{ ida: new Date().toLocaleDateString('pt-BR'), volta: new Date(new Date().getTime() + 7 * 24*60*60*1000).toLocaleDateString('pt-BR')}];
-            
             return {
                 ...airlineData,
                 origin: originData,
                 destination: destinationData,
                 price: `R$ ${parseFloat(apiOffer.price).toFixed(2)}`,
-                priceValue: parseFloat(apiOffer.price),
-                cashPrice: parseFloat(apiOffer.price),
-                isMiles: false,
-                cabinClass: 'Econômica',
-                availableDates,
-                tripType: 'Somente Trecho',
-                isMonitored,
                 promoUrl: `https://www.google.com/flights#flt=${originData.code}.${destinationData.code}.${new Date().toISOString().split('T')[0]}`,
-                createdAt: new Date(),
-                endDateObj: new Date(new Date().getTime() + (7 * 24 * 60 * 60 * 1000)),
-                type: 'flight',
-                id: promoIdCounter
             };
         }
 
-        // --- Funções de Renderização (Exibição na Tela) ---
-        // ... (O resto das suas funções de renderização que já existem)
-        
+        // --- FUNÇÃO PARA EXIBIR OS CARDS NA TELA ---
+        function displayPromotion(promo) {
+            const feed = document.getElementById('feed');
+            if (!feed) return;
+
+            const card = document.createElement('div');
+            card.className = 'promo-card bg-white dark:bg-slate-800 rounded-xl shadow-lg overflow-hidden flex flex-col md:flex-row';
+            card.innerHTML = `
+                <div class="p-6 flex-1 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-sm font-semibold text-rose-500">${promo.origin.city} (${promo.origin.code}) → ${promo.destination.city} (${promo.destination.code})</p>
+                                <h3 class="text-2xl font-bold text-slate-900 dark:text-white mt-1">${promo.price}</h3>
+                            </div>
+                            <span class="text-xs font-semibold uppercase px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-700">${promo.name}</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex items-center justify-end">
+                         <a href="${promo.promoUrl}" target="_blank" class="bg-rose-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-rose-600 transition-colors text-sm">Ver Oferta</a>
+                    </div>
+                </div>
+            `;
+            feed.prepend(card);
+        }
+
+        // --- LÓGICA DE EVENTOS (A PARTE QUE FALTAVA) ---
+        monitorForm.addEventListener('submit', async (event) => {
+            event.preventDefault(); 
+
+            const origin = document.getElementById('monitor-origin').value.toUpperCase();
+            const destination = document.getElementById('monitor-destination').value.toUpperCase();
+
+            if (origin && destination) {
+                console.log(`Iniciando busca para ${origin} -> ${destination}`);
+                
+                const submitButton = monitorForm.querySelector('button[type="submit"]');
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 mr-2 animate-spin"></i> Buscando...';
+                lucide.createIcons();
+                
+                monitoredRoutes.push({ origin, destination });
+                await fetchRealPromotions(origin, destination);
+                
+                submitButton.disabled = false;
+                submitButton.innerHTML = '<i data-lucide="plus-circle" class="w-4 h-4 mr-2"></i> Adicionar Rota';
+                lucide.createIcons();
+
+                document.getElementById('monitor-origin').value = '';
+                document.getElementById('monitor-destination').value = '';
+            } else {
+                alert("Por favor, preencha os campos de origem e destino.");
+            }
+        });
+
         // --- INICIALIZAÇÃO E TIMERS ---
-        // O motor de busca agora prioriza a busca real se houver rotas monitoradas.
         setInterval(async () => {
             if (monitoredRoutes.length > 0) {
-                const routeToSearch = monitoredRoutes[Math.floor(Math.random() * monitoredRoutes.length)];
-                await fetchRealPromotions(routeToSearch.origin, routeToSearch.destination);
+                console.log("Buscando atualizações de rotas monitoradas...");
+                for (const route of monitoredRoutes) {
+                    await fetchRealPromotions(route.origin, route.destination);
+                }
             }
-        }, 15000); // Busca real a cada 15 segundos se houver rotas
+        }, 60000); // Busca a cada 60 segundos para todas as rotas monitoradas
 
     </script>
 </body>
