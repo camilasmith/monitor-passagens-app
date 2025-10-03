@@ -25,28 +25,27 @@
             from { opacity: 0; transform: translateY(-20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        /* Custom scrollbar for webkit browsers */
         ::-webkit-scrollbar {
             width: 8px;
         }
         ::-webkit-scrollbar-track {
-            background: #e2e8f0; /* slate-200 */
+            background: #e2e8f0;
         }
         .dark ::-webkit-scrollbar-track {
-            background: #1e293b; /* slate-800 */
+            background: #1e293b;
         }
         ::-webkit-scrollbar-thumb {
-            background: #94a3b8; /* slate-400 */
+            background: #94a3b8;
             border-radius: 4px;
         }
         .dark ::-webkit-scrollbar-thumb {
-            background: #475569; /* slate-600 */
+            background: #475569;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #64748b; /* slate-500 */
+            background: #64748b;
         }
         .dark ::-webkit-scrollbar-thumb:hover {
-            background: #64748b; /* slate-500 */
+            background: #64748b;
         }
         #mobile-sidebar {
             transition: transform 0.3s ease-in-out;
@@ -152,7 +151,7 @@
                     </div>
                 </header>
                 <div id="feed" class="space-y-6">
-                    </div>
+                </div>
                 <div id="premium-feed" class="space-y-6 hidden">
                 </div>
                 <div id="hotel-feed" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 hidden">
@@ -275,7 +274,7 @@
             feed.prepend(card);
         }
 
-        // --- LÓGICA DE EVENTOS (A PARTE QUE FALTAVA) ---
+        // --- LÓGICA DE EVENTOS ---
         monitorForm.addEventListener('submit', async (event) => {
             event.preventDefault(); 
 
