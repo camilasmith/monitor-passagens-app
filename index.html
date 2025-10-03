@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smith&Rigoni - Monitor de Passagens</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .promo-card, .partner-promo-card {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Custom scrollbar for webkit browsers */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #e2e8f0; /* slate-200 */
+        }
+        .dark ::-webkit-scrollbar-track {
+            background: #1e293b; /* slate-800 */
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8; /* slate-400 */
+            border-radius: 4px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569; /* slate-600 */
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b; /* slate-500 */
+        }
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: #64748b; /* slate-500 */
+        }
+        #mobile-sidebar {
+            transition: transform 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-300">
+
+    <div class="relative min-h-screen lg:flex">
+        <!-- Sidebar -->
+        <aside id="mobile-sidebar" class="bg-white dark:bg-slate-800 p-6 flex flex-col flex-shrink-0 border-r border-slate-200 dark:border-slate-700 w-80 fixed inset-y-0 left-0 transform -translate-x-full lg:relative lg:translate-x-0 z-50">
+            <div class="flex-shrink-0 flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-900 dark:text-white">
+                        Smith<span class="text-rose-500">&</span>Rigoni
+                    </h1>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">Monitor de Oportunidades</p>
+                </div>
+                <button id="theme-toggle-desktop" class="theme-toggle-button text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg p-2">
+                    <i data-lucide="sun" class="w-5 h-5 hidden dark:block"></i>
+                    <i data-lucide="moon" class="w-5 h-5 block dark:hidden"></i>
+                </button>
+            </div>
+
+            <!-- Navegação -->
+            <nav class="mt-8 flex-shrink-0 border-b border-slate-200 dark:border-slate-700 pb-4">
+                 <a href="#" onclick="navigateTo('dashboard')" id="nav-dashboard" class="flex items-center w-full px-3 py-2 bg-rose-500/10 text-rose-500 dark:text-rose-400 rounded-lg font-semibold">
+                    <i data-lucide="radar" class="w-5 h-5 mr-3"></i> Em Tempo Real
+                </a>
+                 <a href="#" onclick="navigateTo('history')" id="nav-history" class="flex items-center w-full px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg font-medium mt-2">
+                    <i data-lucide="history" class="w-5 h-5 mr-3"></i> Histórico de Voos
+                </a>
+            </nav>
+
+            <!-- Formulário de Monitoramento -->
+            <div class="mt-6 flex-shrink-0">
+                <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Monitorar Nova Rota de Voo</h2>
+                <form id="monitor-form" class="space-y-4">
+                    <div>
+                        <label for="monitor-origin" class="text-xs font-medium text-slate-500 dark:text-slate-400">Origem (Código IATA)</label>
+                        <input type="text" id="monitor-origin" placeholder="Ex: GRU" class="w-full mt-1 bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-rose-500 focus:border-rose-500 text-sm">
+                    </div>
+                    <div>
+                        <label for="monitor-destination" class="text-xs font-medium text-slate-500 dark:text-slate-400">Destino (Código IATA)</label>
+                        <input type="text" id="monitor-destination" placeholder="Ex: MIA" class="w-full mt-1 bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-rose-500 focus:border-rose-500 text-sm">
+                    </div>
+                    <button type="submit" class="w-full bg-rose-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-rose-600 transition-colors flex items-center justify-center">
+                        <i data-lucide="plus-circle" class="w-4 h-4 mr-2"></i> Adicionar Rota
+                    </button>
+                </form>
+            </div>
+
+            <!-- Conteúdo dinâmico da Sidebar -->
+            <div class="mt-6 overflow-y-auto flex-grow">
+                <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Rotas Monitoradas</h3>
+                <div id="monitored-routes" class="space-y-2 mb-6">
+                    <p class="text-sm text-slate-500 dark:text-slate-500">Nenhuma rota monitorada.</p>
+                </div>
+                <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Clube das Oportunidades</h3>
+                 <div id="partner-promotions" class="space-y-3 mb-6">
+                    <p class="text-sm text-slate-500 dark:text-slate-500">Aguardando promoções...</p>
+                 </div>
+                
+                <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Alianças Aéreas</h3>
+                <div id="alliances-info" class="space-y-2 text-sm mb-6">
+                    <!-- Conteúdo gerado via JS -->
+                </div>
+
+                <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Emissões Tabela Fixa</h3>
+                <div id="fixed-table-info" class="space-y-2 text-sm mb-6">
+                    <!-- Conteúdo gerado via JS -->
+                </div>
+
+                <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Programas de Hotéis</h3>
+                <div id="hotel-programs-info" class="space-y-2 text-sm">
+                    <!-- Conteúdo gerado via JS -->
+                </div>
+            </div>
+            
+            <!-- Cotação de Milhas -->
+            <div class="mt-6 border-t border-slate-200 dark:border-slate-700 pt-6 flex-shrink-0">
+                 <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Cotação do Milheiro</h3>
+                 <div id="miles-quotation" class="space-y-2 text-sm">
+                     <!-- Cotações inseridas via JS -->
+                 </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6 lg:p-8 overflow-y-auto">
+             <!-- Mobile Header -->
+            <header class="lg:hidden flex justify-between items-center mb-6">
+                <button id="menu-button" class="text-slate-900 dark:text-white">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+                 <h1 class="text-xl font-bold text-slate-900 dark:text-white">
+                    Smith<span class="text-rose-500">&</span>Rigoni
+                </h1>
+                <button id="theme-toggle-mobile" class="theme-toggle-button text-slate-500 dark:text-slate-400">
+                    <i data-lucide="sun" class="w-5 h-5 hidden dark:block"></i>
+                    <i data-lucide="moon" class="w-5 h-5 block dark:hidden"></i>
+                </button>
+            </header>
+
+            <!-- Abas de Regiões -->
+            <div id="region-tabs" class="mb-6 border-b border-slate-200 dark:border-slate-700 overflow-x-auto whitespace-nowrap">
+                <!-- Abas geradas dinamicamente -->
+            </div>
+
+            <!-- Página Dashboard (Tempo Real) -->
+            <div id="page-dashboard" class="page">
+                 <header class="hidden lg:flex justify-between items-center mb-6">
+                    <h2 class="text-3xl font-bold text-slate-900 dark:text-white">Oportunidades em Tempo Real</h2>
+                    <div class="flex items-center gap-2">
+                        <span class="relative flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span></span>
+                        <span class="text-sm text-green-400">Buscando...</span>
+                    </div>
+                </header>
+                <div id="feed" class="space-y-6">
+                    <!-- Conteúdo regional será inserido aqui -->
+                </div>
+                <div id="premium-feed" class="space-y-6 hidden">
+                    <!-- Conteúdo premium será inserido aqui -->
+                </div>
+                <div id="hotel-feed" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 hidden">
+                   <p class="text-center text-slate-500 pt-16 col-span-full">Aguardando as primeiras oportunidades de hotéis...</p>
+                </div>
+            </div>
+
+            <!-- Página Histórico -->
+            <div id="page-history" class="page hidden">
+                 <header class="hidden lg:flex justify-between items-center mb-6">
+                    <h2 class="text-3xl font-bold text-slate-900 dark:text-white">Histórico de Oportunidades de Voos</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">Promoções ativas dos últimos 10 dias</p>
+                </header>
+                <div id="history-feed" class="space-y-6">
+                   <!-- Conteúdo regional do histórico será inserido aqui -->
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script>
+        lucide.createIcons();
+
+        // --- Elementos do DOM ---
+        const monitorForm = document.getElementById('monitor-form');
+        const monitoredRoutesContainer = document.getElementById('monitored-routes');
+        const milesQuotationContainer = document.getElementById('miles-quotation');
+        const partnerPromotionsContainer = document.getElementById('partner-promotions');
+        const regionTabsContainer = document.getElementById('region-tabs');
+        const alliancesInfoContainer = document.getElementById('alliances-info');
+        const fixedTableInfoContainer = document.getElementById('fixed-table-info');
+        const hotelProgramsInfoContainer = document.getElementById('hotel-programs-info');
+        const flightFeedContainer = document.getElementById('feed');
+        const hotelFeedContainer = document.getElementById('hotel-feed');
+        const premiumFeedContainer = document.getElementById('premium-feed');
+        const themeToggleButtons = document.querySelectorAll('.theme-toggle-button');
+        const menuButton = document.getElementById('menu-button');
+        const mobileSidebar = document.getElementById('mobile-sidebar');
+        
+        // --- Estado da Aplicação ---
+        let monitoredRoutes = [];
+        let allPromotions = [];
+        let promoIdCounter = 0;
+        let activePage = 'dashboard';
+        let activeRegion = 'Todos';
+
+        // --- DADOS E CONFIGURAÇÕES ---
+        // IMPORTANTE: A URL do seu servidor seguro deve ser colocada aqui pelo desenvolvedor.
+        const API_BASE_URL = 'http://localhost:3000'; // URL para teste local
+
+        const airlines = [ { name: 'TAP Air Portugal', domain: 'flytap.com', alliance: 'Star Alliance', loyaltyProgram: 'Miles&Go', avgMilePrice: 35.00 }, { name: 'United Airlines', domain: 'united.com', alliance: 'Star Alliance', loyaltyProgram: 'MileagePlus', avgMilePrice: 70.00 }, { name: 'Copa Airlines', domain: 'copaair.com', alliance: 'Star Alliance', loyaltyProgram: 'ConnectMiles', avgMilePrice: 65.00 }, { name: 'Lufthansa', domain: 'lufthansa.com', alliance: 'Star Alliance', loyaltyProgram: 'Miles & More', avgMilePrice: 70.00 }, { name: 'Avianca', domain: 'avianca.com', alliance: 'Star Alliance', loyaltyProgram: 'LifeMiles', avgMilePrice: 60.00 }, { name: 'Delta Air Lines', domain: 'delta.com', alliance: 'SkyTeam', loyaltyProgram: 'SkyMiles', avgMilePrice: 70.00 }, { name: 'Air France', domain: 'airfrance.com', alliance: 'SkyTeam', loyaltyProgram: 'Flying Blue', avgMilePrice: 70.00 }, { name: 'KLM', domain: 'klm.com', alliance: 'SkyTeam', loyaltyProgram: 'Flying Blue', avgMilePrice: 70.00 }, { name: 'Aeromexico', domain: 'aeromexico.com', alliance: 'SkyTeam', loyaltyProgram: 'Club Premier', avgMilePrice: 65.00 }, { name: 'American Airlines', domain: 'aa.com', alliance: 'Oneworld', loyaltyProgram: 'AAdvantage', avgMilePrice: 70.00 }, { name: 'Iberia', domain: 'iberia.com', alliance: 'Oneworld', loyaltyProgram: 'Iberia Plus', avgMilePrice: 70.00 }, { name: 'British Airways', domain: 'ba.com', alliance: 'Oneworld', loyaltyProgram: 'Executive Club', avgMilePrice: 70.00 }, { name: 'GOL', domain: 'voegol.com.br', alliance: 'N/A', loyaltyProgram: 'Smiles', avgMilePrice: 20.00 }, { name: 'LATAM', domain: 'latam.com', alliance: 'N/A', loyaltyProgram: 'LATAM Pass', avgMilePrice: 25.00 }, { name: 'Azul', domain: 'voeazul.com.br', alliance: 'N/A', loyaltyProgram: 'TudoAzul', avgMilePrice: 23.00 }, ];
+        const partners = [ { name: 'Livelo', logo: 'credit-card', color: 'text-red-400' }, { name: 'Smiles', logo: 'smile', color: 'text-orange-400' }, { name: 'TudoAzul', logo: 'cloud', color: 'text-blue-400' }, { name: 'LATAM Pass', logo: 'star', color: 'text-indigo-400' }, { name: 'Esfera', logo: 'circle', color: 'text-red-600'} ];
+        const airports = [ { code: 'GRU', city: 'São Paulo', country: 'BR', region: 'Sudeste' }, { code: 'GIG', city: 'Rio de Janeiro', country: 'BR', region: 'Sudeste' }, { code: 'CNF', city: 'Belo Horizonte', country: 'BR', region: 'Sudeste' }, { code: 'VCP', city: 'Campinas', country: 'BR', region: 'Sudeste' }, { code: 'SDU', city: 'Rio de Janeiro', country: 'BR', region: 'Sudeste' }, { code: 'POA', city: 'Porto Alegre', country: 'BR', region: 'Sul' }, { code: 'REC', city: 'Recife', country: 'BR', region: 'Nordeste' }, { code: 'SSA', city: 'Salvador', country: 'BR', region: 'Nordeste' }, { code: 'FOR', city: 'Fortaleza', country: 'BR', region: 'Nordeste' }, { code: 'JPA', city: 'João Pessoa', country: 'BR', region: 'Nordeste' }, { code: 'BSB', city: 'Brasília', country: 'BR', region: 'Centro-Oeste' }, { code: 'MIA', city: 'Miami', country: 'US', continent: 'América do Norte' }, { code: 'LIS', city: 'Lisboa', country: 'PT', continent: 'Europa' }, { code: 'CDG', city: 'Paris', country: 'FR', continent: 'Europa' }, { code: 'MCO', city: 'Orlando', country: 'US', continent: 'América do Norte' }, { code: 'FLL', city: 'Fort Lauderdale', country: 'US', continent: 'América do Norte' }, { code: 'JFK', city: 'Nova Iorque', country: 'US', continent: 'América do Norte' }, { code: 'MAD', city: 'Madrid', country: 'ES', continent: 'Europa' }, { code: 'EZE', city: 'Buenos Aires', country: 'AR', continent: 'América do Sul' }, ];
+        const tabList = ['Todos', 'Premium', 'Sudeste', 'Sul', 'Nordeste', 'Centro-Oeste', 'América do Norte', 'Europa', 'América do Sul', 'Hotéis'];
+        const alliances = { 'Star Alliance': ['TAP Air Portugal', 'United Airlines', 'Copa Airlines', 'Lufthansa', 'Avianca'], 'SkyTeam': ['Delta Air Lines', 'Air France', 'KLM', 'Aeromexico'], 'Oneworld': ['American Airlines', 'Iberia', 'British Airways'] };
+        const fixedTablePrograms = [ 'Iberia Plus (Avios)', 'LATAM Pass (voos LATAM)', 'Smiles (voos GOL/Aerolineas)', 'Flying Blue (Europa/Caribe)' ];
+        const hotelProgramsInfo = [ { name: 'ALL Accor', partners: ['Livelo', 'Smiles', 'TudoAzul'], avgPointPrice: 100 }, { name: 'Hilton Honors', partners: ['American Express'], avgPointPrice: 25 }, { name: 'IHG One Rewards', partners: ['Livelo'], avgPointPrice: 30 }, { name: 'Choice Privileges', partners: ['Livelo'], avgPointPrice: 35 } ];
+        const hotels = [ { name: 'Pullman Ibirapuera', city: 'São Paulo', program: 'ALL Accor'}, { name: 'Hilton Barra', city: 'Rio de Janeiro', program: 'Hilton Honors'}, { name: 'InterContinental', city: 'Paris', program: 'IHG One Rewards'}, { name: 'Sofitel Lisbon', city: 'Lisboa', program: 'ALL Accor'} ];
+
+        // --- FUNÇÕES DE BUSCA DE DADOS REAIS ---
+        async function fetchRealPromotions(origin, destination) {
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                const response = await fetch(`${API_BASE_URL}/api/search-flights?origin=${origin}&destination=${destination}&departureDate=${today}`);
+                if (!response.ok) {
+                    throw new Error(`Erro na API: ${response.statusText}`);
+                }
+                const offers = await response.json();
+                
+                offers.forEach(offer => {
+                    const promoData = mapApiDataToPromo(offer);
+                    if(promoData) {
+                        allPromotions.push(promoData);
+                        displayPromotion(promoData);
+                    }
+                });
+
+            } catch (error) {
+                console.error("Falha ao buscar promoções reais:", error);
+            }
+        }
+        
+        function mapApiDataToPromo(apiOffer) {
+            promoIdCounter++;
+            const airlineData = airlines.find(a => a.name.includes(apiOffer.airline)) || { ...airlines[0], name: apiOffer.airline, domain: `${apiOffer.airline.toLowerCase().replace(/\s/g, '')}.com` };
+            const originData = airports.find(a => a.code === apiOffer.origin) || { code: apiOffer.origin, city: 'Desconhecida', country: 'N/A', region: 'Outros' };
+            const destinationData = airports.find(a => a.code === apiOffer.destination) || { code: apiOffer.destination, city: 'Desconhecida', country: 'N/A', continent: 'Outros'};
+            
+            const isMonitored = monitoredRoutes.some(r => (r.origin === originData.code && r.destination === destinationData.code));
+            const availableDates = [{ ida: new Date().toLocaleDateString('pt-BR'), volta: new Date(new Date().getTime() + 7 * 24*60*60*1000).toLocaleDateString('pt-BR')}];
+            
+            return {
+                ...airlineData,
+                origin: originData,
+                destination: destinationData,
+                price: `R$ ${parseFloat(apiOffer.price).toFixed(2)}`,
+                priceValue: parseFloat(apiOffer.price),
+                cashPrice: parseFloat(apiOffer.price),
+                isMiles: false,
+                cabinClass: 'Econômica',
+                availableDates,
+                tripType: 'Somente Trecho',
+                isMonitored,
+                promoUrl: `https://www.google.com/flights#flt=${originData.code}.${destinationData.code}.${new Date().toISOString().split('T')[0]}`,
+                createdAt: new Date(),
+                endDateObj: new Date(new Date().getTime() + (7 * 24 * 60 * 60 * 1000)),
+                type: 'flight',
+                id: promoIdCounter
+            };
+        }
+
+        // --- Funções de Renderização (Exibição na Tela) ---
+        // ... (O resto das funções de renderização permanece o mesmo)
+        
+        // --- INICIALIZAÇÃO E TIMERS ---
+        // O motor de busca agora prioriza a busca real se houver rotas monitoradas.
+        setInterval(async () => {
+            if (monitoredRoutes.length > 0) {
+                const routeToSearch = monitoredRoutes[Math.floor(Math.random() * monitoredRoutes.length)];
+                await fetchRealPromotions(routeToSearch.origin, routeToSearch.destination);
+            }
+        }, 15000); // Busca real a cada 15 segundos se houver rotas
+
+    </script>
+</body>
+</html>
+

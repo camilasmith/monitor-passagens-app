@@ -1,0 +1,5 @@
+Ignora o arquivo que contém as chaves secretas da API
+.env
+
+Ignora a pasta de dependências que será instalada pelo servidor online
+node_modules
