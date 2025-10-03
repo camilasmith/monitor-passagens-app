@@ -56,7 +56,6 @@
 <body class="bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-300">
 
     <div class="relative min-h-screen lg:flex">
-        <!-- Sidebar -->
         <aside id="mobile-sidebar" class="bg-white dark:bg-slate-800 p-6 flex flex-col flex-shrink-0 border-r border-slate-200 dark:border-slate-700 w-80 fixed inset-y-0 left-0 transform -translate-x-full lg:relative lg:translate-x-0 z-50">
             <div class="flex-shrink-0 flex justify-between items-center">
                 <div>
@@ -71,17 +70,15 @@
                 </button>
             </div>
 
-            <!-- Navegação -->
             <nav class="mt-8 flex-shrink-0 border-b border-slate-200 dark:border-slate-700 pb-4">
-                 <a href="#" onclick="navigateTo('dashboard')" id="nav-dashboard" class="flex items-center w-full px-3 py-2 bg-rose-500/10 text-rose-500 dark:text-rose-400 rounded-lg font-semibold">
+                <a href="#" onclick="navigateTo('dashboard')" id="nav-dashboard" class="flex items-center w-full px-3 py-2 bg-rose-500/10 text-rose-500 dark:text-rose-400 rounded-lg font-semibold">
                     <i data-lucide="radar" class="w-5 h-5 mr-3"></i> Em Tempo Real
                 </a>
-                 <a href="#" onclick="navigateTo('history')" id="nav-history" class="flex items-center w-full px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg font-medium mt-2">
+                <a href="#" onclick="navigateTo('history')" id="nav-history" class="flex items-center w-full px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg font-medium mt-2">
                     <i data-lucide="history" class="w-5 h-5 mr-3"></i> Histórico de Voos
                 </a>
             </nav>
 
-            <!-- Formulário de Monitoramento -->
             <div class="mt-6 flex-shrink-0">
                 <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Monitorar Nova Rota de Voo</h2>
                 <form id="monitor-form" class="space-y-4">
@@ -99,50 +96,42 @@
                 </form>
             </div>
 
-            <!-- Conteúdo dinâmico da Sidebar -->
             <div class="mt-6 overflow-y-auto flex-grow">
                 <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Rotas Monitoradas</h3>
                 <div id="monitored-routes" class="space-y-2 mb-6">
                     <p class="text-sm text-slate-500 dark:text-slate-500">Nenhuma rota monitorada.</p>
                 </div>
                 <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Clube das Oportunidades</h3>
-                 <div id="partner-promotions" class="space-y-3 mb-6">
+                <div id="partner-promotions" class="space-y-3 mb-6">
                     <p class="text-sm text-slate-500 dark:text-slate-500">Aguardando promoções...</p>
-                 </div>
+                </div>
                 
                 <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Alianças Aéreas</h3>
                 <div id="alliances-info" class="space-y-2 text-sm mb-6">
-                    <!-- Conteúdo gerado via JS -->
-                </div>
+                    </div>
 
                 <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Emissões Tabela Fixa</h3>
                 <div id="fixed-table-info" class="space-y-2 text-sm mb-6">
-                    <!-- Conteúdo gerado via JS -->
-                </div>
+                    </div>
 
                 <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Programas de Hotéis</h3>
                 <div id="hotel-programs-info" class="space-y-2 text-sm">
-                    <!-- Conteúdo gerado via JS -->
-                </div>
+                    </div>
             </div>
             
-            <!-- Cotação de Milhas -->
             <div class="mt-6 border-t border-slate-200 dark:border-slate-700 pt-6 flex-shrink-0">
-                 <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Cotação do Milheiro</h3>
-                 <div id="miles-quotation" class="space-y-2 text-sm">
-                     <!-- Cotações inseridas via JS -->
-                 </div>
+                <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Cotação do Milheiro</h3>
+                <div id="miles-quotation" class="space-y-2 text-sm">
+                    </div>
             </div>
         </aside>
 
-        <!-- Main Content -->
         <main class="flex-1 p-6 lg:p-8 overflow-y-auto">
-             <!-- Mobile Header -->
             <header class="lg:hidden flex justify-between items-center mb-6">
                 <button id="menu-button" class="text-slate-900 dark:text-white">
                     <i data-lucide="menu" class="w-6 h-6"></i>
                 </button>
-                 <h1 class="text-xl font-bold text-slate-900 dark:text-white">
+                <h1 class="text-xl font-bold text-slate-900 dark:text-white">
                     Smith<span class="text-rose-500">&</span>Rigoni
                 </h1>
                 <button id="theme-toggle-mobile" class="theme-toggle-button text-slate-500 dark:text-slate-400">
@@ -151,14 +140,11 @@
                 </button>
             </header>
 
-            <!-- Abas de Regiões -->
             <div id="region-tabs" class="mb-6 border-b border-slate-200 dark:border-slate-700 overflow-x-auto whitespace-nowrap">
-                <!-- Abas geradas dinamicamente -->
-            </div>
+                </div>
 
-            <!-- Página Dashboard (Tempo Real) -->
             <div id="page-dashboard" class="page">
-                 <header class="hidden lg:flex justify-between items-center mb-6">
+                <header class="hidden lg:flex justify-between items-center mb-6">
                     <h2 class="text-3xl font-bold text-slate-900 dark:text-white">Oportunidades em Tempo Real</h2>
                     <div class="flex items-center gap-2">
                         <span class="relative flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span></span>
@@ -166,25 +152,21 @@
                     </div>
                 </header>
                 <div id="feed" class="space-y-6">
-                    <!-- Conteúdo regional será inserido aqui -->
-                </div>
+                    </div>
                 <div id="premium-feed" class="space-y-6 hidden">
-                    <!-- Conteúdo premium será inserido aqui -->
-                </div>
+                    </div>
                 <div id="hotel-feed" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 hidden">
-                   <p class="text-center text-slate-500 pt-16 col-span-full">Aguardando as primeiras oportunidades de hotéis...</p>
+                    <p class="text-center text-slate-500 pt-16 col-span-full">Aguardando as primeiras oportunidades de hotéis...</p>
                 </div>
             </div>
 
-            <!-- Página Histórico -->
             <div id="page-history" class="page hidden">
-                 <header class="hidden lg:flex justify-between items-center mb-6">
+                <header class="hidden lg:flex justify-between items-center mb-6">
                     <h2 class="text-3xl font-bold text-slate-900 dark:text-white">Histórico de Oportunidades de Voos</h2>
                     <p class="text-sm text-slate-500 dark:text-slate-400">Promoções ativas dos últimos 10 dias</p>
                 </header>
                 <div id="history-feed" class="space-y-6">
-                   <!-- Conteúdo regional do histórico será inserido aqui -->
-                </div>
+                    </div>
             </div>
         </main>
     </div>
@@ -216,8 +198,7 @@
         let activeRegion = 'Todos';
 
         // --- DADOS E CONFIGURAÇÕES ---
-        // IMPORTANTE: A URL do seu servidor seguro deve ser colocada aqui pelo desenvolvedor.
-        const API_BASE_URL = 'http://localhost:3000'; // URL para teste local
+        const API_BASE_URL = 'https://monitor-passagens-server.onrender.com'; // URL final do servidor no Render
 
         const airlines = [ { name: 'TAP Air Portugal', domain: 'flytap.com', alliance: 'Star Alliance', loyaltyProgram: 'Miles&Go', avgMilePrice: 35.00 }, { name: 'United Airlines', domain: 'united.com', alliance: 'Star Alliance', loyaltyProgram: 'MileagePlus', avgMilePrice: 70.00 }, { name: 'Copa Airlines', domain: 'copaair.com', alliance: 'Star Alliance', loyaltyProgram: 'ConnectMiles', avgMilePrice: 65.00 }, { name: 'Lufthansa', domain: 'lufthansa.com', alliance: 'Star Alliance', loyaltyProgram: 'Miles & More', avgMilePrice: 70.00 }, { name: 'Avianca', domain: 'avianca.com', alliance: 'Star Alliance', loyaltyProgram: 'LifeMiles', avgMilePrice: 60.00 }, { name: 'Delta Air Lines', domain: 'delta.com', alliance: 'SkyTeam', loyaltyProgram: 'SkyMiles', avgMilePrice: 70.00 }, { name: 'Air France', domain: 'airfrance.com', alliance: 'SkyTeam', loyaltyProgram: 'Flying Blue', avgMilePrice: 70.00 }, { name: 'KLM', domain: 'klm.com', alliance: 'SkyTeam', loyaltyProgram: 'Flying Blue', avgMilePrice: 70.00 }, { name: 'Aeromexico', domain: 'aeromexico.com', alliance: 'SkyTeam', loyaltyProgram: 'Club Premier', avgMilePrice: 65.00 }, { name: 'American Airlines', domain: 'aa.com', alliance: 'Oneworld', loyaltyProgram: 'AAdvantage', avgMilePrice: 70.00 }, { name: 'Iberia', domain: 'iberia.com', alliance: 'Oneworld', loyaltyProgram: 'Iberia Plus', avgMilePrice: 70.00 }, { name: 'British Airways', domain: 'ba.com', alliance: 'Oneworld', loyaltyProgram: 'Executive Club', avgMilePrice: 70.00 }, { name: 'GOL', domain: 'voegol.com.br', alliance: 'N/A', loyaltyProgram: 'Smiles', avgMilePrice: 20.00 }, { name: 'LATAM', domain: 'latam.com', alliance: 'N/A', loyaltyProgram: 'LATAM Pass', avgMilePrice: 25.00 }, { name: 'Azul', domain: 'voeazul.com.br', alliance: 'N/A', loyaltyProgram: 'TudoAzul', avgMilePrice: 23.00 }, ];
         const partners = [ { name: 'Livelo', logo: 'credit-card', color: 'text-red-400' }, { name: 'Smiles', logo: 'smile', color: 'text-orange-400' }, { name: 'TudoAzul', logo: 'cloud', color: 'text-blue-400' }, { name: 'LATAM Pass', logo: 'star', color: 'text-indigo-400' }, { name: 'Esfera', logo: 'circle', color: 'text-red-600'} ];
@@ -246,7 +227,8 @@
                     }
                 });
 
-            } catch (error) {
+            } catch (error)
+            {
                 console.error("Falha ao buscar promoções reais:", error);
             }
         }
@@ -281,7 +263,7 @@
         }
 
         // --- Funções de Renderização (Exibição na Tela) ---
-        // ... (O resto das funções de renderização permanece o mesmo)
+        // ... (O resto das suas funções de renderização que já existem)
         
         // --- INICIALIZAÇÃO E TIMERS ---
         // O motor de busca agora prioriza a busca real se houver rotas monitoradas.
@@ -295,4 +277,3 @@
     </script>
 </body>
 </html>
-
