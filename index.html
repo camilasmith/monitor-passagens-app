@@ -1,262 +1,102 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smith&Rigoni - Monitor de Passagens</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-        }
-    </script>
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .promo-card { animation: fadeIn 0.5s ease-in-out; }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #e2e8f0; }
-        .dark ::-webkit-scrollbar-track { background: #1e293b; }
-        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
-        .dark ::-webkit-scrollbar-thumb { background: #475569; }
-        #mobile-sidebar { transition: transform 0.3s ease-in-out; }
-    </style>
-</head>
-<body class="bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-300">
+fetch(`https://NOME-DO-SEU-PROJETO.onrender.com/api/ofertas?${queryParams}`)\
+```\
+\
+E, no caso de envio de WhatsApp:\
+\
+```javascript\
+fetch(`https://NOME-DO-SEU-PROJETO.onrender.com/api/enviar-whatsapp`, {\
+method: "POST",\
+headers: { "Content-Type": "application/json" },\
+body: JSON.stringify(payload)\
+})\
+```\
+\
+Se seu servidor no Render estiver aceitando CORS (`Access-Control-Allow-Origin: \*` ou o seu domínio), o HTML se conectará normalmente.\
+\
+---\
+\
+##  \*\*2️⃣ Botão de “Ir direto para a oferta” e realizar compra\*\* \
+Na versão inicial que te enviei, o botão  \*\*apenas envia alerta para WhatsApp\*\* .  \
+Se você quer  \*\*um botão que leve direto para a oferta oficial de compra\*\*  (dentro do seu sistema ou num link do fornecedor), você precisa que a sua API  \*\*já retorne a URL direta de compra\*\*  junto com as informações do voo.\
+\
+### Exemplo esperado de resposta da API\
+```json\
+[\
+{\
+"company": "LATAM",\
+"flightNumber": "LA1234",\
+"origin": "GRU",\
+"destination": "MIA",\
+"date": "2024-08-10",\
+"price": 1850,\
+"miles": 32000,\
+"milesProgram": "LATAM Pass",\
+"buyUrl": "https://latam.com/compra?voo=LA1234"\
+}\
+]\
+```\
+\
+---\
+\
+### Código atualizado com botão de compra direta\
+```javascript\
+document.getElementById("searchBtn").addEventListener("click", async () => {\
+const origin = document.getElementById("origin").value;\
+const destination = document.getElementById("destination").value;\
+const dateMin = document.getElementById("date-min").value;\
+const dateMax = document.getElementById("date-max").value;\
+const travelClass = document.getElementById("class").value;\
+const maxPrice = document.getElementById("max-price").value;\
+\
+const queryParams = new URLSearchParams({\
+origin, destination, dateMin, dateMax, travelClass, maxPrice\
+});\
+\
+try {\
+const response = await fetch(`https://NOME-DO-SEU-PROJETO.onrender.com/api/ofertas?${queryParams}`);
+        const data = await response.json();
+ 
+        document.getElementById("offers").innerHTML = data.map(oferta => `
+            <div class="offer">
+                <h3>${oferta.company} - ${oferta.flightNumber}</h3>
+                <p>Origem: ${oferta.origin} | Destino: ${oferta.destination}</p>
+                <p>Data: ${oferta.date}</p>\
+<p>Preço: R$ ${oferta.price}</p>\
+<p>Milhas: ${oferta.miles} (${oferta.milesProgram})</p>\
+<div>\
+<button onclick="sendWhatsApp('${oferta.company} - ${oferta.flightNumber}', '${oferta.price}')">Enviar WhatsApp</button>
+                    <a href="${oferta.buyUrl}" target="\_blank" style="text-decoration:none;">\
+<button>Comprar Agora</button>\
+</a>\
+</div>\
+</div>\
+`).join('');\
+} catch (error) {\
+console.error("Erro ao buscar ofertas", error);\
+}\
+});\
+```\
+\
+---\
+\
+### Alterações feitas\
+- Adicionei um `<a>` com `href="${oferta.buyUrl}" target="_blank"` para abrir  **diretamente**  no site de compra.
+- Isso evita que o usuário tenha que visitar outra página dentro do seu sistema antes de comprar.
+- O botão ainda envia alerta via WhatsApp se o usuário quiser ser notificado da oferta.
+ 
+---
+ 
+## ✅ Conclusão
+-  **Integração com Render:**  Sim, funciona, basta colocar a  **URL pública da sua API**  no `fetch()`.
+-  **Botão de compra direta:**  Também é possível, mas  **depende da sua API retornar o link de compra (`buyUrl`)** .
+-  **Experiência do usuário:**  Ele pode clicar e comprar diretamente no site, ou receber alerta no WhatsApp antes de decidir.
+ 
+---
+ 
+Se você quiser, posso  **reescrever o código completo do `index.html` já adaptado para:** 
+1. Apontar para seu servidor no Render.  
+2. Ter botão de compra direta.  
+3. Ainda manter envio para WhatsApp para os dois números fixos.  
+ 
+📌 Você quer que eu já te envie esse  **`index.html` final e pronto para uso** ? Assim você só cola no seu servidor ou hospedagem e ele já vai funcionar.
 
-    <div class="relative min-h-screen lg:flex">
-        <aside id="mobile-sidebar" class="bg-white dark:bg-slate-800 p-6 flex flex-col flex-shrink-0 border-r border-slate-200 dark:border-slate-700 w-80 fixed inset-y-0 left-0 transform -translate-x-full lg:relative lg:translate-x-0 z-50">
-            <div class="flex-shrink-0 flex justify-between items-center">
-                <div>
-                    <h1 class="text-2xl font-bold text-slate-900 dark:text-white">
-                        Smith<span class="text-rose-500">&</span>Rigoni
-                    </h1>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">Monitor de Oportunidades</p>
-                </div>
-            </div>
-
-            <nav class="mt-8 flex-shrink-0 border-b border-slate-200 dark:border-slate-700 pb-4">
-                <a href="#" id="nav-dashboard" class="flex items-center w-full px-3 py-2 bg-rose-500/10 text-rose-500 dark:text-rose-400 rounded-lg font-semibold">
-                    <i data-lucide="radar" class="w-5 h-5 mr-3"></i> Em Tempo Real
-                </a>
-            </nav>
-
-            <div class="mt-6 flex-shrink-0">
-                <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Monitorar Nova Rota</h2>
-                <form id="monitor-form" class="space-y-4">
-                    <div>
-                        <label for="monitor-origin" class="text-xs font-medium text-slate-500 dark:text-slate-400">Origem (IATA)</label>
-                        <input type="text" id="monitor-origin" placeholder="Ex: GRU" class="w-full mt-1 bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-rose-500 focus:border-rose-500 text-sm">
-                    </div>
-                    <div>
-                        <label for="monitor-destination" class="text-xs font-medium text-slate-500 dark:text-slate-400">Destino (IATA)</label>
-                        <input type="text" id="monitor-destination" placeholder="Ex: MIA" class="w-full mt-1 bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-rose-500 focus:border-rose-500 text-sm">
-                    </div>
-                    <button type="submit" class="w-full bg-rose-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-rose-600 transition-colors flex items-center justify-center">
-                        <i data-lucide="plus-circle" class="w-4 h-4 mr-2"></i> Adicionar Rota
-                    </button>
-                </form>
-            </div>
-
-            <div class="mt-6 overflow-y-auto flex-grow">
-                <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Rotas Monitoradas</h3>
-                <div id="monitored-routes" class="space-y-2 mb-6">
-                    </div>
-            </div>
-        </aside>
-
-        <main class="flex-1 p-6 lg:p-8 overflow-y-auto">
-            <header class="hidden lg:flex justify-between items-center mb-6">
-                <h2 class="text-3xl font-bold text-slate-900 dark:text-white">Oportunidades em Tempo Real</h2>
-                <div class="flex items-center gap-2">
-                    <span class="relative flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span></span>
-                    <span id="status-text" class="text-sm text-slate-500 dark:text-slate-400">Aguardando busca...</span>
-                </div>
-            </header>
-            <div id="feed" class="space-y-6">
-                </div>
-        </main>
-    </div>
-    
-    <script>
-        lucide.createIcons();
-
-        const monitorForm = document.getElementById('monitor-form');
-        const monitoredRoutesContainer = document.getElementById('monitored-routes');
-        const flightFeedContainer = document.getElementById('feed');
-        const statusText = document.getElementById('status-text');
-
-        let monitoredRoutes = [];
-
-        const API_BASE_URL = 'https://monitor-passagens-server.onrender.com';
-        const airports = [ { code: 'GRU', city: 'São Paulo' }, { code: 'GIG', city: 'Rio de Janeiro' }, { code: 'CNF', city: 'Belo Horizonte' }, { code: 'VCP', city: 'Campinas' }, { code: 'SDU', city: 'Rio de Janeiro' }, { code: 'POA', city: 'Porto Alegre' }, { code: 'REC', city: 'Recife' }, { code: 'SSA', city: 'Salvador' }, { code: 'FOR', city: 'Fortaleza' }, { code: 'JPA', city: 'João Pessoa' }, { code: 'BSB', city: 'Brasília' }, { code: 'MIA', city: 'Miami' }, { code: 'LIS', city: 'Lisboa' }, { code: 'CDG', city: 'Paris' }, { code: 'MCO', city: 'Orlando' }, { code: 'FLL', city: 'Fort Lauderdale' }, { code: 'JFK', city: 'Nova Iorque' }, { code: 'MAD', city: 'Madrid' }, { code: 'EZE', city: 'Buenos Aires' } ];
-
-        async function fetchRealPromotions(origin, destination) {
-            statusText.textContent = `Buscando ${origin} → ${destination}...`;
-            try {
-                const today = new Date().toISOString().split('T')[0];
-                const response = await fetch(`${API_BASE_URL}/api/search-flights?origin=${origin}&destination=${destination}&departureDate=${today}`);
-                if (!response.ok) throw new Error(`API retornou erro: ${response.statusText}`);
-                
-                const responseData = await response.json();
-                const offers = responseData.data;
-                
-                console.log("Ofertas recebidas do servidor:", responseData);
-
-                if (!offers || offers.length === 0) {
-                    statusText.textContent = `Nenhuma oferta encontrada para ${origin} → ${destination}.`;
-                    return;
-                }
-                
-                flightFeedContainer.innerHTML = '';
-                offers.forEach(offer => {
-                    const promoData = mapApiDataToPromo(offer);
-                    if(promoData) displayPromotion(promoData);
-                });
-                statusText.textContent = `Mostrando ${offers.length} ofertas para ${origin} → ${destination}.`;
-            } catch (error) {
-                console.error("Falha ao buscar promoções:", error);
-                statusText.textContent = 'Erro ao buscar ofertas. Verifique o console.';
-            }
-        }
-
-        function mapApiDataToPromo(apiOffer) {
-            try {
-                const firstItinerary = apiOffer.itineraries[0];
-                const lastSegment = firstItinerary.segments[firstItinerary.segments.length - 1];
-                
-                const originCode = firstItinerary.segments[0].departure.iataCode;
-                const destinationCode = lastSegment.arrival.iataCode;
-                const airlineCode = apiOffer.validatingAirlineCodes[0];
-                const price = `R$ ${parseFloat(apiOffer.price.total).toFixed(2)}`;
-
-                const originData = airports.find(a => a.code === originCode) || { code: originCode, city: 'Desconhecida' };
-                const destinationData = airports.find(a => a.code === destinationCode) || { code: destinationCode, city: 'Desconhecida' };
-                
-                return {
-                    origin: originData,
-                    destination: destinationData,
-                    price: price,
-                    airline: airlineCode,
-                    promoUrl: `https://www.google.com/flights#flt=${originCode}.${destinationCode}.${new Date().toISOString().split('T')[0]}`,
-                };
-            } catch (e) {
-                console.error("Erro ao mapear oferta:", apiOffer, e);
-                return null;
-            }
-        }
-
-        function displayPromotion(promo) {
-            const card = document.createElement('div');
-            card.className = 'promo-card bg-white dark:bg-slate-800 rounded-xl shadow-lg overflow-hidden';
-            card.innerHTML = `
-                <div class="p-6">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-sm font-semibold text-rose-500">${promo.origin.city} (${promo.origin.code}) → ${promo.destination.city} (${promo.destination.code})</p>
-                            <h3 class="text-2xl font-bold text-slate-900 dark:text-white mt-1">${promo.price}</h3>
-                        </div>
-                        <span class="text-xs font-semibold uppercase px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-700">${promo.airline}</span>
-                    </div>
-                    <div class="mt-4 flex items-center justify-end">
-                         <a href="${promo.promoUrl}" target="_blank" class="bg-rose-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-rose-600 transition-colors text-sm">Ver Oferta</a>
-                    </div>
-                </div>
-            `;
-            flightFeedContainer.prepend(card);
-        }
-        
-        function renderMonitoredRoutes() {
-            monitoredRoutesContainer.innerHTML = '';
-            if (monitoredRoutes.length === 0) {
-                monitoredRoutesContainer.innerHTML = '<p class="text-sm text-slate-500">Nenhuma rota monitorada.</p>';
-                return;
-            }
-            monitoredRoutes.forEach((route, index) => {
-                const routeEl = document.createElement('div');
-                routeEl.className = 'flex justify-between items-center bg-slate-100 dark:bg-slate-700 p-2 rounded-lg';
-                routeEl.innerHTML = `
-                    <span class="text-sm font-medium">${route.origin} → ${route.destination}</span>
-                    <button data-index="${index}" class="remove-route-btn text-slate-400 hover:text-rose-500 font-bold text-lg leading-none">&times;</button>
-                `;
-                monitoredRoutesContainer.appendChild(routeEl);
-            });
-        }
-        
-        function saveRoutesToLocalStorage() {
-            localStorage.setItem('monitoredRoutes', JSON.stringify(monitoredRoutes));
-        }
-
-        function loadRoutesFromLocalStorage() {
-            const savedRoutes = localStorage.getItem('monitoredRoutes');
-            if (savedRoutes) {
-                monitoredRoutes = JSON.parse(savedRoutes);
-                renderMonitoredRoutes();
-            }
-        }
-
-        monitorForm.addEventListener('submit', async (event) => {
-            event.preventDefault(); 
-            const originInput = document.getElementById('monitor-origin');
-            const destinationInput = document.getElementById('monitor-destination');
-            const origin = originInput.value.toUpperCase().trim();
-            const destination = destinationInput.value.toUpperCase().trim();
-            const submitButton = monitorForm.querySelector('button[type="submit"]');
-
-            if (origin && destination) {
-                submitButton.disabled = true;
-                submitButton.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 mr-2 animate-spin"></i> Buscando...';
-                lucide.createIcons();
-                
-                if (!monitoredRoutes.some(r => r.origin === origin && r.destination === destination)) {
-                    monitoredRoutes.push({ origin, destination });
-                    saveRoutesToLocalStorage();
-                    renderMonitoredRoutes();
-                }
-                
-                await fetchRealPromotions(origin, destination);
-                
-                submitButton.disabled = false;
-                submitButton.innerHTML = '<i data-lucide="plus-circle" class="w-4 h-4 mr-2"></i> Adicionar Rota';
-                lucide.createIcons();
-                originInput.value = '';
-                destinationInput.value = '';
-            } else {
-                alert("Por favor, preencha os campos de origem e destino.");
-            }
-        });
-
-        monitoredRoutesContainer.addEventListener('click', (event) => {
-            if (event.target.classList.contains('remove-route-btn')) {
-                const indexToRemove = parseInt(event.target.getAttribute('data-index'), 10);
-                monitoredRoutes.splice(indexToRemove, 1);
-                saveRoutesToLocalStorage();
-                renderMonitoredRoutes();
-            }
-        });
-
-        document.addEventListener('DOMContentLoaded', () => {
-            loadRoutesFromLocalStorage();
-            if (monitoredRoutes.length > 0) {
-                const lastRoute = monitoredRoutes[monitoredRoutes.length - 1];
-                fetchRealPromotions(lastRoute.origin, lastRoute.destination);
-            }
-        });
-
-        setInterval(() => {
-            if (monitoredRoutes.length > 0) {
-                console.log("Buscando atualizações de rotas monitoradas...");
-                const randomRoute = monitoredRoutes[Math.floor(Math.random() * monitoredRoutes.length)];
-                fetchRealPromotions(randomRoute.origin, randomRoute.destination);
-            }
-        }, 300000); // Busca a cada 5 minutos
-    </script>
-</body>
-</html>
