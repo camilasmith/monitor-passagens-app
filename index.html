@@ -15,12 +15,8 @@
         }
     </script>
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        .promo-card, .partner-promo-card {
-            animation: fadeIn 0.5s ease-in-out;
-        }
+        body { font-family: 'Inter', sans-serif; }
+        .promo-card { animation: fadeIn 0.5s ease-in-out; }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-20px); }
             to { opacity: 1; transform: translateY(0); }
@@ -30,8 +26,6 @@
         .dark ::-webkit-scrollbar-track { background: #1e293b; }
         ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
         .dark ::-webkit-scrollbar-thumb { background: #475569; }
-        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
-        .dark ::-webkit-scrollbar-thumb:hover { background: #64748b; }
         #mobile-sidebar { transition: transform 0.3s ease-in-out; }
     </style>
 </head>
@@ -46,30 +40,23 @@
                     </h1>
                     <p class="text-sm text-slate-500 dark:text-slate-400">Monitor de Oportunidades</p>
                 </div>
-                <button id="theme-toggle-desktop" class="theme-toggle-button text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg p-2">
-                    <i data-lucide="sun" class="w-5 h-5 hidden dark:block"></i>
-                    <i data-lucide="moon" class="w-5 h-5 block dark:hidden"></i>
-                </button>
             </div>
 
             <nav class="mt-8 flex-shrink-0 border-b border-slate-200 dark:border-slate-700 pb-4">
                 <a href="#" id="nav-dashboard" class="flex items-center w-full px-3 py-2 bg-rose-500/10 text-rose-500 dark:text-rose-400 rounded-lg font-semibold">
                     <i data-lucide="radar" class="w-5 h-5 mr-3"></i> Em Tempo Real
                 </a>
-                <a href="#" id="nav-history" class="flex items-center w-full px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg font-medium mt-2">
-                    <i data-lucide="history" class="w-5 h-5 mr-3"></i> Histórico de Voos
-                </a>
             </nav>
 
             <div class="mt-6 flex-shrink-0">
-                <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Monitorar Nova Rota de Voo</h2>
+                <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Monitorar Nova Rota</h2>
                 <form id="monitor-form" class="space-y-4">
                     <div>
-                        <label for="monitor-origin" class="text-xs font-medium text-slate-500 dark:text-slate-400">Origem (Código IATA)</label>
+                        <label for="monitor-origin" class="text-xs font-medium text-slate-500 dark:text-slate-400">Origem (IATA)</label>
                         <input type="text" id="monitor-origin" placeholder="Ex: GRU" class="w-full mt-1 bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-rose-500 focus:border-rose-500 text-sm">
                     </div>
                     <div>
-                        <label for="monitor-destination" class="text-xs font-medium text-slate-500 dark:text-slate-400">Destino (Código IATA)</label>
+                        <label for="monitor-destination" class="text-xs font-medium text-slate-500 dark:text-slate-400">Destino (IATA)</label>
                         <input type="text" id="monitor-destination" placeholder="Ex: MIA" class="w-full mt-1 bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-rose-500 focus:border-rose-500 text-sm">
                     </div>
                     <button type="submit" class="w-full bg-rose-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-rose-600 transition-colors flex items-center justify-center">
@@ -86,30 +73,15 @@
         </aside>
 
         <main class="flex-1 p-6 lg:p-8 overflow-y-auto">
-            <header class="lg:hidden flex justify-between items-center mb-6">
-                <button id="menu-button" class="text-slate-900 dark:text-white">
-                    <i data-lucide="menu" class="w-6 h-6"></i>
-                </button>
-                <h1 class="text-xl font-bold text-slate-900 dark:text-white">
-                    Smith<span class="text-rose-500">&</span>Rigoni
-                </h1>
-                <button id="theme-toggle-mobile" class="theme-toggle-button text-slate-500 dark:text-slate-400">
-                    <i data-lucide="sun" class="w-5 h-5 hidden dark:block"></i>
-                    <i data-lucide="moon" class="w-5 h-5 block dark:hidden"></i>
-                </button>
+            <header class="hidden lg:flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold text-slate-900 dark:text-white">Oportunidades em Tempo Real</h2>
+                <div class="flex items-center gap-2">
+                    <span class="relative flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span></span>
+                    <span id="status-text" class="text-sm text-slate-500 dark:text-slate-400">Aguardando busca...</span>
+                </div>
             </header>
-
-            <div id="page-dashboard" class="page">
-                <header class="hidden lg:flex justify-between items-center mb-6">
-                    <h2 class="text-3xl font-bold text-slate-900 dark:text-white">Oportunidades em Tempo Real</h2>
-                    <div class="flex items-center gap-2">
-                        <span class="relative flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span></span>
-                        <span id="status-text" class="text-sm text-green-400">Aguardando busca...</span>
-                    </div>
-                </header>
-                <div id="feed" class="space-y-6">
-                    </div>
-            </div>
+            <div id="feed" class="space-y-6">
+                </div>
         </main>
     </div>
     
@@ -124,56 +96,62 @@
         let monitoredRoutes = [];
 
         const API_BASE_URL = 'https://monitor-passagens-server.onrender.com';
-        const airports = [ { code: 'GRU', city: 'São Paulo' }, { code: 'GIG', city: 'Rio de Janeiro' }, { code: 'CNF', city: 'Belo Horizonte' }, { code: 'VCP', city: 'Campinas' }, { code: 'SDU', city: 'Rio de Janeiro' }, { code: 'POA', city: 'Porto Alegre' }, { code: 'REC', city: 'Recife' }, { code: 'SSA', city: 'Salvador' }, { code: 'FOR', city: 'Fortaleza' }, { code: 'JPA', city: 'João Pessoa' }, { code: 'BSB', city: 'Brasília' }, { code: 'MIA', city: 'Miami' }, { code: 'LIS', city: 'Lisboa' }, { code: 'CDG', city: 'Paris' }, { code: 'MCO', city: 'Orlando' }, { code: 'FLL', city: 'Fort Lauderdale' }, { code: 'JFK', city: 'Nova Iorque' }, { code: 'MAD', city: 'Madrid' }, { code: 'EZE', city: 'Buenos Aires' }, ];
-
-        // --- FUNÇÕES DE LÓGICA ---
+        const airports = [ { code: 'GRU', city: 'São Paulo' }, { code: 'GIG', city: 'Rio de Janeiro' }, { code: 'CNF', city: 'Belo Horizonte' }, { code: 'VCP', city: 'Campinas' }, { code: 'SDU', city: 'Rio de Janeiro' }, { code: 'POA', city: 'Porto Alegre' }, { code: 'REC', city: 'Recife' }, { code: 'SSA', city: 'Salvador' }, { code: 'FOR', city: 'Fortaleza' }, { code: 'JPA', city: 'João Pessoa' }, { code: 'BSB', city: 'Brasília' }, { code: 'MIA', city: 'Miami' }, { code: 'LIS', city: 'Lisboa' }, { code: 'CDG', city: 'Paris' }, { code: 'MCO', city: 'Orlando' }, { code: 'FLL', city: 'Fort Lauderdale' }, { code: 'JFK', city: 'Nova Iorque' }, { code: 'MAD', city: 'Madrid' }, { code: 'EZE', city: 'Buenos Aires' } ];
 
         async function fetchRealPromotions(origin, destination) {
-            statusText.textContent = `Buscando ${origin}→${destination}...`;
+            statusText.textContent = `Buscando ${origin} → ${destination}...`;
             try {
                 const today = new Date().toISOString().split('T')[0];
                 const response = await fetch(`${API_BASE_URL}/api/search-flights?origin=${origin}&destination=${destination}&departureDate=${today}`);
-                if (!response.ok) throw new Error(`Erro na API: ${response.statusText}`);
+                if (!response.ok) throw new Error(`API retornou erro: ${response.statusText}`);
                 
                 const responseData = await response.json();
-                const offers = responseData.data; // A API da Amadeus geralmente aninha os dados em um campo 'data'
+                const offers = responseData.data;
                 
+                console.log("Ofertas recebidas do servidor:", responseData);
+
                 if (!offers || offers.length === 0) {
-                    statusText.textContent = `Nenhuma oferta encontrada para ${origin}→${destination}.`;
-                } else {
-                    flightFeedContainer.innerHTML = ''; // Limpa o feed para novos resultados
-                    offers.forEach(offer => {
-                        const promoData = mapApiDataToPromo(offer);
-                        if(promoData) displayPromotion(promoData);
-                    });
-                    statusText.textContent = 'Busca concluída!';
+                    statusText.textContent = `Nenhuma oferta encontrada para ${origin} → ${destination}.`;
+                    return;
                 }
+                
+                flightFeedContainer.innerHTML = '';
+                offers.forEach(offer => {
+                    const promoData = mapApiDataToPromo(offer);
+                    if(promoData) displayPromotion(promoData);
+                });
+                statusText.textContent = `Mostrando ${offers.length} ofertas para ${origin} → ${destination}.`;
             } catch (error) {
-                console.error("Falha ao buscar promoções reais:", error);
-                statusText.textContent = 'Erro na busca.';
+                console.error("Falha ao buscar promoções:", error);
+                statusText.textContent = 'Erro ao buscar ofertas. Verifique o console.';
             }
         }
 
         function mapApiDataToPromo(apiOffer) {
-            // AJUSTE PARA O FORMATO DA AMADEUS (SUPOSIÇÃO)
-            const originCode = apiOffer.itineraries[0].segments[0].departure.iataCode;
-            const destinationCode = apiOffer.itineraries[0].segments[apiOffer.itineraries[0].segments.length - 1].arrival.iataCode;
-            const airlineCode = apiOffer.validatingAirlineCodes[0];
-            const price = `R$ ${parseFloat(apiOffer.price.total).toFixed(2)}`;
+            try {
+                const firstItinerary = apiOffer.itineraries[0];
+                const lastSegment = firstItinerary.segments[firstItinerary.segments.length - 1];
+                
+                const originCode = firstItinerary.segments[0].departure.iataCode;
+                const destinationCode = lastSegment.arrival.iataCode;
+                const airlineCode = apiOffer.validatingAirlineCodes[0];
+                const price = `R$ ${parseFloat(apiOffer.price.total).toFixed(2)}`;
 
-            const originData = airports.find(a => a.code === originCode) || { code: originCode, city: 'Desconhecida' };
-            const destinationData = airports.find(a => a.code === destinationCode) || { code: destinationCode, city: 'Desconhecida' };
-            
-            return {
-                origin: originData,
-                destination: destinationData,
-                price: price,
-                airline: airlineCode,
-                promoUrl: `https://www.google.com/flights#flt=${originCode}.${destinationCode}.${new Date().toISOString().split('T')[0]}`,
-            };
+                const originData = airports.find(a => a.code === originCode) || { code: originCode, city: 'Desconhecida' };
+                const destinationData = airports.find(a => a.code === destinationCode) || { code: destinationCode, city: 'Desconhecida' };
+                
+                return {
+                    origin: originData,
+                    destination: destinationData,
+                    price: price,
+                    airline: airlineCode,
+                    promoUrl: `https://www.google.com/flights#flt=${originCode}.${destinationCode}.${new Date().toISOString().split('T')[0]}`,
+                };
+            } catch (e) {
+                console.error("Erro ao mapear oferta:", apiOffer, e);
+                return null;
+            }
         }
-
-        // --- FUNÇÕES DE RENDERIZAÇÃO (UI) ---
 
         function displayPromotion(promo) {
             const card = document.createElement('div');
@@ -198,7 +176,7 @@
         function renderMonitoredRoutes() {
             monitoredRoutesContainer.innerHTML = '';
             if (monitoredRoutes.length === 0) {
-                monitoredRoutesContainer.innerHTML = '<p class="text-sm text-slate-500 dark:text-slate-500">Nenhuma rota monitorada.</p>';
+                monitoredRoutesContainer.innerHTML = '<p class="text-sm text-slate-500">Nenhuma rota monitorada.</p>';
                 return;
             }
             monitoredRoutes.forEach((route, index) => {
@@ -206,13 +184,11 @@
                 routeEl.className = 'flex justify-between items-center bg-slate-100 dark:bg-slate-700 p-2 rounded-lg';
                 routeEl.innerHTML = `
                     <span class="text-sm font-medium">${route.origin} → ${route.destination}</span>
-                    <button data-index="${index}" class="remove-route-btn text-slate-400 hover:text-rose-500">&times;</button>
+                    <button data-index="${index}" class="remove-route-btn text-slate-400 hover:text-rose-500 font-bold text-lg leading-none">&times;</button>
                 `;
                 monitoredRoutesContainer.appendChild(routeEl);
             });
         }
-
-        // --- FUNÇÕES DE PERSISTÊNCIA (localStorage) ---
         
         function saveRoutesToLocalStorage() {
             localStorage.setItem('monitoredRoutes', JSON.stringify(monitoredRoutes));
@@ -226,14 +202,12 @@
             }
         }
 
-        // --- LÓGICA DE EVENTOS ---
-
         monitorForm.addEventListener('submit', async (event) => {
             event.preventDefault(); 
             const originInput = document.getElementById('monitor-origin');
             const destinationInput = document.getElementById('monitor-destination');
-            const origin = originInput.value.toUpperCase();
-            const destination = destinationInput.value.toUpperCase();
+            const origin = originInput.value.toUpperCase().trim();
+            const destination = destinationInput.value.toUpperCase().trim();
             const submitButton = monitorForm.querySelector('button[type="submit"]');
 
             if (origin && destination) {
@@ -268,22 +242,19 @@
             }
         });
 
-        // --- INICIALIZAÇÃO ---
-        
         document.addEventListener('DOMContentLoaded', () => {
             loadRoutesFromLocalStorage();
-            // Se houver rotas salvas, busca a primeira ao carregar a página
             if (monitoredRoutes.length > 0) {
-                fetchRealPromotions(monitoredRoutes[0].origin, monitoredRoutes[0].destination);
+                const lastRoute = monitoredRoutes[monitoredRoutes.length - 1];
+                fetchRealPromotions(lastRoute.origin, lastRoute.destination);
             }
         });
 
         setInterval(() => {
             if (monitoredRoutes.length > 0) {
                 console.log("Buscando atualizações de rotas monitoradas...");
-                // Busca apenas a primeira rota monitorada para não sobrecarregar a API
-                const routeToSearch = monitoredRoutes[0];
-                fetchRealPromotions(routeToSearch.origin, routeToSearch.destination);
+                const randomRoute = monitoredRoutes[Math.floor(Math.random() * monitoredRoutes.length)];
+                fetchRealPromotions(randomRoute.origin, randomRoute.destination);
             }
         }, 300000); // Busca a cada 5 minutos
     </script>
