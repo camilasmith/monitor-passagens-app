@@ -1,102 +1,303 @@
-fetch(`https://NOME-DO-SEU-PROJETO.onrender.com/api/ofertas?${queryParams}`)\
-```\
-\
-E, no caso de envio de WhatsApp:\
-\
-```javascript\
-fetch(`https://NOME-DO-SEU-PROJETO.onrender.com/api/enviar-whatsapp`, {\
-method: "POST",\
-headers: { "Content-Type": "application/json" },\
-body: JSON.stringify(payload)\
-})\
-```\
-\
-Se seu servidor no Render estiver aceitando CORS (`Access-Control-Allow-Origin: \*` ou o seu domínio), o HTML se conectará normalmente.\
-\
----\
-\
-##  \*\*2️⃣ Botão de “Ir direto para a oferta” e realizar compra\*\* \
-Na versão inicial que te enviei, o botão  \*\*apenas envia alerta para WhatsApp\*\* .  \
-Se você quer  \*\*um botão que leve direto para a oferta oficial de compra\*\*  (dentro do seu sistema ou num link do fornecedor), você precisa que a sua API  \*\*já retorne a URL direta de compra\*\*  junto com as informações do voo.\
-\
-### Exemplo esperado de resposta da API\
-```json\
-[\
-{\
-"company": "LATAM",\
-"flightNumber": "LA1234",\
-"origin": "GRU",\
-"destination": "MIA",\
-"date": "2024-08-10",\
-"price": 1850,\
-"miles": 32000,\
-"milesProgram": "LATAM Pass",\
-"buyUrl": "https://latam.com/compra?voo=LA1234"\
-}\
-]\
-```\
-\
----\
-\
-### Código atualizado com botão de compra direta\
-```javascript\
-document.getElementById("searchBtn").addEventListener("click", async () => {\
-const origin = document.getElementById("origin").value;\
-const destination = document.getElementById("destination").value;\
-const dateMin = document.getElementById("date-min").value;\
-const dateMax = document.getElementById("date-max").value;\
-const travelClass = document.getElementById("class").value;\
-const maxPrice = document.getElementById("max-price").value;\
-\
-const queryParams = new URLSearchParams({\
-origin, destination, dateMin, dateMax, travelClass, maxPrice\
-});\
-\
-try {\
-const response = await fetch(`https://NOME-DO-SEU-PROJETO.onrender.com/api/ofertas?${queryParams}`);
-        const data = await response.json();
- 
-        document.getElementById("offers").innerHTML = data.map(oferta => `
-            <div class="offer">
-                <h3>${oferta.company} - ${oferta.flightNumber}</h3>
-                <p>Origem: ${oferta.origin} | Destino: ${oferta.destination}</p>
-                <p>Data: ${oferta.date}</p>\
-<p>Preço: R$ ${oferta.price}</p>\
-<p>Milhas: ${oferta.miles} (${oferta.milesProgram})</p>\
-<div>\
-<button onclick="sendWhatsApp('${oferta.company} - ${oferta.flightNumber}', '${oferta.price}')">Enviar WhatsApp</button>
-                    <a href="${oferta.buyUrl}" target="\_blank" style="text-decoration:none;">\
-<button>Comprar Agora</button>\
-</a>\
-</div>\
-</div>\
-`).join('');\
-} catch (error) {\
-console.error("Erro ao buscar ofertas", error);\
-}\
-});\
-```\
-\
----\
-\
-### Alterações feitas\
-- Adicionei um `<a>` com `href="${oferta.buyUrl}" target="_blank"` para abrir  **diretamente**  no site de compra.
-- Isso evita que o usuário tenha que visitar outra página dentro do seu sistema antes de comprar.
-- O botão ainda envia alerta via WhatsApp se o usuário quiser ser notificado da oferta.
- 
----
- 
-## ✅ Conclusão
--  **Integração com Render:**  Sim, funciona, basta colocar a  **URL pública da sua API**  no `fetch()`.
--  **Botão de compra direta:**  Também é possível, mas  **depende da sua API retornar o link de compra (`buyUrl`)** .
--  **Experiência do usuário:**  Ele pode clicar e comprar diretamente no site, ou receber alerta no WhatsApp antes de decidir.
- 
----
- 
-Se você quiser, posso  **reescrever o código completo do `index.html` já adaptado para:** 
-1. Apontar para seu servidor no Render.  
-2. Ter botão de compra direta.  
-3. Ainda manter envio para WhatsApp para os dois números fixos.  
- 
-📌 Você quer que eu já te envie esse  **`index.html` final e pronto para uso** ? Assim você só cola no seu servidor ou hospedagem e ele já vai funcionar.
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor Global de Passagens</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'brand': { '500': '#3b82f6', '600': '#2563eb' },
+                        'gray': { '850': '#182134', '950': '#0b111e' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #cbd5e1; }
+        .card-item { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1e293b; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        .nav-btn.active { color: #3b82f6; background-color: #3b82f61a; }
+        .modal-backdrop { animation: fadeIn 0.3s ease-in-out; }
+        .modal-content { animation: slideInUp 0.3s ease-in-out; }
+        @keyframes slideInUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    </style>
+</head>
+<body class="dark">
+
+    <div class="flex h-screen bg-gray-950 text-slate-300">
+        <!-- Menu Lateral -->
+        <aside class="w-20 bg-gray-950 p-4 flex flex-col items-center border-r border-slate-800">
+            <div class="text-brand-500 font-bold text-xl">S&R</div>
+            <nav class="flex flex-col items-center gap-6 mt-12">
+                <button id="nav-search" class="nav-btn p-3 rounded-xl hover:bg-slate-800 transition-colors" title="Buscar Voos">
+                    <i data-lucide="search" class="w-6 h-6"></i>
+                </button>
+                <button id="nav-alerts" class="nav-btn p-3 rounded-xl hover:bg-slate-800 transition-colors" title="Meus Alertas">
+                    <i data-lucide="bell" class="w-6 h-6"></i>
+                </button>
+            </nav>
+        </aside>
+
+        <!-- Painel de Filtros -->
+        <section class="w-full max-w-sm bg-slate-900 p-6 flex flex-col border-r border-slate-800">
+            <h2 class="text-2xl font-bold text-white mb-6">Encontrar Oportunidades</h2>
+            <form id="search-form" class="space-y-4 overflow-y-auto pr-2 flex-grow">
+                <div>
+                    <label class="text-sm font-medium">Origem / Destino</label>
+                    <div class="flex gap-2 mt-1">
+                        <input type="text" id="origin" placeholder="Origem" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 focus:ring-brand-500 focus:border-brand-500">
+                        <input type="text" id="destination" placeholder="Destino" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 focus:ring-brand-500 focus:border-brand-500">
+                    </div>
+                </div>
+                <div>
+                    <label for="dates" class="text-sm font-medium">Datas</label>
+                    <select id="dates" class="w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 focus:ring-brand-500 focus:border-brand-500">
+                        <option>Qualquer data</option>
+                        <option>Próximo fim de semana</option>
+                        <option>Janeiro 2026</option>
+                    </select>
+                </div>
+                 <div>
+                    <label for="cabin" class="text-sm font-medium">Classe</label>
+                    <select id="cabin" class="w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 focus:ring-brand-500 focus:border-brand-500">
+                        <option>Todas</option>
+                        <option>Econômica</option>
+                        <option>Executiva</option>
+                        <option>Primeira</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="stops" class="text-sm font-medium">Escalas</label>
+                    <select id="stops" class="w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 focus:ring-brand-500 focus:border-brand-500">
+                        <option>Qualquer número</option>
+                        <option>Apenas voos diretos</option>
+                        <option>Até 1 escala</option>
+                    </select>
+                </div>
+                 <div>
+                    <label for="price" class="text-sm font-medium">Preço Máximo</label>
+                    <input type="range" id="price" min="500" max="20000" step="100" value="20000" class="w-full mt-2 accent-brand-500">
+                    <div class="text-right text-sm text-slate-400">Até R$ <span id="price-value">20.000</span></div>
+                </div>
+            </form>
+             <div class="mt-4 pt-4 border-t border-slate-800">
+                <button type="submit" form="search-form" class="w-full bg-brand-600 text-white font-bold py-3 rounded-lg hover:bg-brand-500 transition-all shadow-lg flex items-center justify-center">
+                    <i data-lucide="search" class="w-5 h-5 mr-2"></i>Buscar Agora
+                </button>
+                <button type="button" id="create-alert-btn" class="w-full mt-2 bg-slate-700 text-slate-300 font-bold py-3 rounded-lg hover:bg-slate-600 transition-all flex items-center justify-center">
+                    <i data-lucide="bell-plus" class="w-5 h-5 mr-2"></i>Criar Alerta com esta Busca
+                </button>
+            </div>
+        </section>
+
+        <!-- Conteúdo Principal -->
+        <main class="flex-1 p-6 lg:p-8 overflow-y-auto flex flex-col">
+            <header class="flex justify-between items-center mb-6">
+                 <h2 id="main-title" class="text-3xl font-bold text-white">Resultados da Busca</h2>
+                 <span id="results-count" class="text-sm font-medium text-slate-400"></span>
+            </header>
+
+            <div id="panel-search-results" class="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-6"></div>
+            <div id="panel-my-alerts" class="hidden space-y-4"></div>
+        </main>
+    </div>
+    
+    <!-- Modal de Alerta -->
+    <div id="alert-modal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center modal-backdrop">
+        <div class="bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md m-4 modal-content border border-slate-800">
+            <div class="p-6">
+                <div class="flex justify-between items-start">
+                    <h3 class="text-xl font-bold text-white">Confirmar Alerta</h3>
+                    <button id="close-modal-btn" class="text-slate-400 hover:text-white">&times;</button>
+                </div>
+                <p class="text-sm text-slate-400 mt-2">Você será notificado quando encontrarmos um voo com os seus critérios.</p>
+                <div id="alert-summary" class="mt-4 bg-slate-800 p-4 rounded-lg text-sm space-y-1"></div>
+                <div class="mt-4">
+                    <label class="text-sm font-medium">Notificar via:</label>
+                    <div class="flex gap-4 mt-2">
+                        <label class="flex items-center gap-2"><input type="checkbox" checked class="accent-brand-500"> WhatsApp</label>
+                        <label class="flex items-center gap-2"><input type="checkbox" checked class="accent-brand-500"> Push</label>
+                        <label class="flex items-center gap-2"><input type="checkbox" class="accent-brand-500"> E-mail</label>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-slate-800/50 px-6 py-4 rounded-b-2xl flex justify-end">
+                <button id="confirm-alert-btn" class="bg-brand-600 text-white font-bold py-2 px-5 rounded-lg hover:bg-brand-500 transition-all">Salvar Alerta</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        lucide.createIcons();
+
+        // --- MOCK DATA (SIMULAÇÃO DE DADOS REAIS DA API) ---
+        const mockFlights = [
+            { id: 1, airline: { code: 'TP', name: 'TAP Air Portugal' }, origin: { code: 'GRU', city: 'São Paulo', country: 'BR' }, destination: { code: 'LIS', city: 'Lisboa', country: 'PT' }, price: { cash: 4580.50, miles: 120000, program: 'Miles&Go' }, cabin: 'Econômica', stops: 0, buyUrl: '#' },
+            { id: 2, airline: { code: 'AD', name: 'Azul' }, origin: { code: 'VCP', city: 'Campinas', country: 'BR' }, destination: { code: 'MCO', city: 'Orlando', country: 'US' }, price: { cash: 3950.00 }, cabin: 'Econômica', stops: 0, buyUrl: '#' },
+            { id: 3, airline: { code: 'AA', name: 'American Airlines' }, origin: { code: 'GIG', city: 'Rio de Janeiro', country: 'BR' }, destination: { code: 'MIA', city: 'Miami', country: 'US' }, price: { cash: 12500.00 }, cabin: 'Executiva', stops: 1, buyUrl: '#' },
+            { id: 4, airline: { code: 'G3', name: 'GOL' }, origin: { code: 'GRU', city: 'São Paulo', country: 'BR' }, destination: { code: 'EZE', city: 'Buenos Aires', country: 'AR' }, price: { miles: 25000, program: 'Smiles' }, cabin: 'Econômica', stops: 0, buyUrl: '#' },
+        ];
+        
+        // --- ELEMENTOS E ESTADO ---
+        const elements = {};
+        ['nav-search', 'nav-alerts', 'search-form', 'main-title', 'panel-search-results', 'panel-my-alerts', 'create-alert-btn', 'alert-modal', 'close-modal-btn', 'confirm-alert-btn', 'alert-summary', 'price-value', 'results-count'].forEach(id => elements[id] = document.getElementById(id));
+        let myAlerts = [];
+
+        // --- FUNÇÕES ---
+        const getCountryFlag = (code) => code.toUpperCase().split('').map(c => String.fromCodePoint(127397 + c.charCodeAt())).join('');
+        
+        function renderFlightCard(flight) {
+            const hasMiles = flight.price.miles && flight.price.program;
+            const priceCash = flight.price.cash;
+            const mileValue = hasMiles && priceCash ? (priceCash / flight.price.miles * 1000).toFixed(2) : null;
+            
+            let recommendation = '';
+            if (mileValue) {
+                if (mileValue < 20) recommendation = '<span class="text-green-400">Bom valor em Milhas</span>';
+                else recommendation = '<span class="text-amber-400">Comprar em Dinheiro</span>';
+            }
+
+            return `
+                <div class="card-item bg-slate-900 border border-slate-800 rounded-2xl shadow-lg flex flex-col">
+                    <div class="p-5">
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center gap-2">
+                                <img src="https://logo.clearbit.com/${flight.airline.name.toLowerCase().replace(/\s/g, '')}.com" onerror="this.style.display='none'" class="h-6 w-6 rounded-full bg-slate-700"/>
+                                <span class="text-sm font-semibold text-slate-300">${flight.airline.name}</span>
+                            </div>
+                            <span class="text-xs font-semibold uppercase px-2 py-1 rounded-full bg-slate-800 text-slate-400">${flight.cabin}</span>
+                        </div>
+                        <div class="my-4 text-center">
+                            <div class="flex items-center justify-center gap-2 text-xl font-bold text-white">
+                                <span>${getCountryFlag(flight.origin.country)} ${flight.origin.code}</span>
+                                <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500"></i>
+                                <span>${getCountryFlag(flight.destination.country)} ${flight.destination.code}</span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 text-center">
+                            <div class="bg-slate-800/50 rounded-lg p-3">
+                                <div class="text-xl text-white font-bold">${priceCash ? `R$ ${priceCash.toFixed(2)}` : 'N/A'}</div>
+                                <div class="text-xs text-slate-400">Em dinheiro</div>
+                            </div>
+                            <div class="bg-slate-800/50 rounded-lg p-3">
+                                <div class="text-xl text-white font-bold">${hasMiles ? parseInt(flight.price.miles).toLocaleString('pt-BR') : 'N/A'}</div>
+                                <div class="text-xs text-slate-400">${hasMiles ? flight.price.program : 'Milhas'}</div>
+                            </div>
+                        </div>
+                        ${mileValue ? `<div class="text-center mt-3 text-sm font-medium">${recommendation} <span class="text-slate-400">(R$ ${mileValue}/milheiro)</span></div>` : ''}
+                    </div>
+                    <div class="mt-auto bg-slate-800/50 p-4 rounded-b-2xl flex gap-2">
+                         <a href="${flight.buyUrl}" target="_blank" class="w-full bg-brand-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-brand-500 transition-colors flex items-center justify-center text-sm">Ver Oferta</a>
+                         <button class="p-2 bg-slate-700 rounded-lg hover:bg-slate-600"><i data-lucide="share-2" class="w-4 h-4 text-white"></i></button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderAlertCard(alertData, index) {
+             return `
+                <div class="card-item bg-slate-900 border border-slate-800 rounded-2xl shadow-lg p-5">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="text-lg font-bold text-white">${alertData.origin} → ${alertData.destination}</div>
+                            <div class="text-sm text-slate-400 mt-1">${alertData.cabin} | Até R$ ${alertData.price}</div>
+                        </div>
+                        <button data-index="${index}" class="remove-alert-btn text-slate-500 hover:text-rose-500 text-2xl">&times;</button>
+                    </div>
+                </div>
+             `;
+        }
+
+        function renderSearchResults(flights) {
+            elements['panel-search-results'].innerHTML = flights.map(renderFlightCard).join('');
+            elements['results-count'].textContent = `${flights.length} ofertas encontradas`;
+            lucide.createIcons();
+        }
+
+        function renderMyAlerts() {
+            if (myAlerts.length === 0) {
+                elements['panel-my-alerts'].innerHTML = '<p class="text-center text-slate-500">Você ainda não criou nenhum alerta.</p>';
+                return;
+            }
+            elements['panel-my-alerts'].innerHTML = myAlerts.map(renderAlertCard).join('');
+        }
+
+        // --- EVENTOS ---
+        elements['nav-search'].addEventListener('click', () => {
+            elements['main-title'].textContent = 'Resultados da Busca';
+            elements['panel-search-results'].classList.remove('hidden');
+            elements['panel-my-alerts'].classList.add('hidden');
+            elements['nav-search'].classList.add('active');
+            elements['nav-alerts'].classList.remove('active');
+        });
+        elements['nav-alerts'].addEventListener('click', () => {
+            elements['main-title'].textContent = 'Meus Alertas';
+            elements['panel-my-alerts'].classList.remove('hidden');
+            elements['panel-search-results'].classList.add('hidden');
+            elements['nav-alerts'].classList.add('active');
+            elements['nav-search'].classList.remove('active');
+            renderMyAlerts();
+        });
+
+        elements['search-form'].addEventListener('submit', (e) => {
+            e.preventDefault();
+            renderSearchResults(mockFlights);
+        });
+
+        elements['create-alert-btn'].addEventListener('click', () => {
+            const origin = document.getElementById('origin').value || 'Qualquer';
+            const destination = document.getElementById('destination').value || 'Qualquer';
+            const cabin = document.getElementById('cabin').value;
+            const price = document.getElementById('price-value').textContent;
+            elements['alert-summary'].innerHTML = `
+                <p><strong>Rota:</strong> ${origin} → ${destination}</p>
+                <p><strong>Classe:</strong> ${cabin}</p>
+                <p><strong>Preço Máximo:</strong> R$ ${price}</p>
+            `;
+            elements['alert-modal'].classList.remove('hidden');
+        });
+
+        elements['close-modal-btn'].addEventListener('click', () => elements['alert-modal'].classList.add('hidden'));
+        elements['confirm-alert-btn'].addEventListener('click', () => {
+            myAlerts.push({
+                origin: document.getElementById('origin').value || 'Qualquer',
+                destination: document.getElementById('destination').value || 'Qualquer',
+                cabin: document.getElementById('cabin').value,
+                price: document.getElementById('price-value').textContent
+            });
+            elements['alert-modal'].classList.add('hidden');
+        });
+        
+        document.getElementById('price').addEventListener('input', (e) => {
+            elements['price-value'].textContent = parseInt(e.target.value).toLocaleString('pt-BR');
+        });
+
+        document.getElementById('panel-my-alerts').addEventListener('click', (e) => {
+            if (e.target.closest('.remove-alert-btn')) {
+                myAlerts.splice(e.target.closest('.remove-alert-btn').dataset.index, 1);
+                renderMyAlerts();
+            }
+        });
+
+        // --- INICIALIZAÇÃO ---
+        document.addEventListener('DOMContentLoaded', () => {
+            elements['nav-search'].click();
+            renderSearchResults(mockFlights); // Simula uma busca inicial
+        });
+    </script>
+</body>
+</html>
 
