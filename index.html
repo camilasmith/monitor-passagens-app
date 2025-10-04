@@ -1,61 +1,291 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Monitor de Passagens</title>
-  <script>
-    const API_BASE = "https://monitor-passagens-server.onrender.com";
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor Global de Passagens</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'brand': { '500': '#3b82f6', '600': '#2563eb' },
+                        'gray': { '850': '#182134', '950': '#0b111e' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #cbd5e1; }
+        .card-item { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1e293b; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        .nav-btn.active { color: #3b82f6; background-color: #3b82f61a; }
+        .modal-backdrop { animation: fadeIn 0.3s ease-in-out; }
+        .modal-content { animation: slideInUp 0.3s ease-in-out; }
+        @keyframes slideInUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    </style>
+</head>
+<body class="dark">
 
-    async function buscarVoos() {
-      const origin = document.getElementById("origin").value.trim();
-      const destination = document.getElementById("destination").value.trim();
-      const departureDate = document.getElementById("departureDate").value.trim();
+    <div class="flex h-screen bg-gray-950 text-slate-300">
+        <!-- Menu Lateral -->
+        <aside class="w-20 bg-gray-950 p-4 flex flex-col items-center border-r border-slate-800">
+            <div class="text-brand-500 font-bold text-xl">S&R</div>
+            <nav class="flex flex-col items-center gap-6 mt-12">
+                <button id="nav-search" class="nav-btn p-3 rounded-xl hover:bg-slate-800 transition-colors" title="Buscar Voos">
+                    <i data-lucide="search" class="w-6 h-6"></i>
+                </button>
+                <button id="nav-alerts" class="nav-btn p-3 rounded-xl hover:bg-slate-800 transition-colors" title="Meus Alertas">
+                    <i data-lucide="bell" class="w-6 h-6"></i>
+                </button>
+            </nav>
+        </aside>
 
-      if (!origin || !destination || !departureDate) {
-        alert("Preencha origem, destino e data!");
-        return;
-      }
+        <!-- Painel de Filtros -->
+        <section class="w-full max-w-sm bg-slate-900 p-6 flex flex-col border-r border-slate-800">
+            <h2 class="text-2xl font-bold text-white mb-6">Encontrar Oportunidades</h2>
+            <form id="search-form" class="space-y-4 overflow-y-auto pr-2 flex-grow">
+                <div>
+                    <label class="text-sm font-medium">Origem / Destino</label>
+                    <div class="flex gap-2 mt-1">
+                        <input type="text" id="origin" placeholder="Origem" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 focus:ring-brand-500 focus:border-brand-500">
+                        <input type="text" id="destination" placeholder="Destino" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 focus:ring-brand-500 focus:border-brand-500">
+                    </div>
+                </div>
+            </form>
+             <div class="mt-4 pt-4 border-t border-slate-800">
+                <button type="submit" form="search-form" class="w-full bg-brand-600 text-white font-bold py-3 rounded-lg hover:bg-brand-500 transition-all shadow-lg flex items-center justify-center">
+                    <i data-lucide="search" class="w-5 h-5 mr-2"></i>Buscar Agora
+                </button>
+                <button type="button" id="create-alert-btn" class="w-full mt-2 bg-slate-700 text-slate-300 font-bold py-3 rounded-lg hover:bg-slate-600 transition-all flex items-center justify-center">
+                    <i data-lucide="bell-plus" class="w-5 h-5 mr-2"></i>Criar Alerta
+                </button>
+            </div>
+        </section>
 
-      try {
-        document.getElementById("result").innerText = "🔎 Buscando voos...";
-        const res = await fetch(`${API_BASE}/api/search-flights?origin=${origin}&destination=${destination}&departureDate=${departureDate}`);
-        const data = await res.json();
+        <!-- Conteúdo Principal -->
+        <main class="flex-1 p-6 lg:p-8 overflow-y-auto flex flex-col">
+            <header class="flex justify-between items-center mb-6">
+                 <h2 id="main-title" class="text-3xl font-bold text-white">Resultados da Busca</h2>
+                 <div class="flex items-center gap-2 text-sm text-slate-400">
+                    <div id="status-indicator"></div>
+                    <span id="status-text">Pronto para buscar.</span>
+                </div>
+            </header>
 
-        if (data.error) {
-          document.getElementById("result").innerText = "❌ Erro: " + data.error;
-          return;
+            <div id="panel-search-results" class="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-6"></div>
+            <p id="feed-placeholder" class="text-center text-slate-500 col-span-full pt-16">Use o painel à esquerda para buscar uma rota.</p>
+            <div id="panel-my-alerts" class="hidden space-y-4"></div>
+        </main>
+    </div>
+    
+    <!-- Modal de Alerta -->
+    <div id="alert-modal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center modal-backdrop">
+        <div class="bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md m-4 modal-content border border-slate-800">
+            <div class="p-6">
+                <h3 class="text-xl font-bold text-white">Confirmar Alerta</h3>
+                <div id="alert-summary" class="mt-4 bg-slate-800 p-4 rounded-lg text-sm space-y-1"></div>
+            </div>
+            <div class="bg-slate-800/50 px-6 py-4 rounded-b-2xl flex justify-end gap-3">
+                <button id="close-modal-btn" class="bg-slate-700 text-slate-300 font-bold py-2 px-5 rounded-lg hover:bg-slate-600 transition-all">Cancelar</button>
+                <button id="confirm-alert-btn" class="bg-brand-600 text-white font-bold py-2 px-5 rounded-lg hover:bg-brand-500 transition-all">Salvar Alerta</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        lucide.createIcons();
+
+        const API_BASE_URL = 'https://monitor-passagens-server.onrender.com';
+        
+        const elements = {};
+        ['nav-search', 'nav-alerts', 'search-form', 'main-title', 'panel-search-results', 'panel-my-alerts', 'create-alert-btn', 'alert-modal', 'close-modal-btn', 'confirm-alert-btn', 'alert-summary', 'status-text', 'status-indicator', 'feed-placeholder'].forEach(id => elements[id] = document.getElementById(id));
+        
+        let myAlerts = [];
+
+        function updateStatus(message, color = 'gray') {
+            if (elements['status-text']) elements['status-text'].textContent = message;
+            if (elements['status-indicator']) {
+                const colors = { gray: 'bg-slate-500', blue: 'bg-blue-500', green: 'bg-green-500', red: 'bg-red-500' };
+                elements['status-indicator'].innerHTML = `<div class="relative flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full ${colors[color]} opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 ${colors[color]}"></span></div>`;
+            }
         }
 
-        let html = "<h3>Ofertas encontradas:</h3><ul>";
-        data.forEach(o => {
-          html += `<li>✈️ ${o.airline} — R$ ${o.price}</li>`;
+        async function handleSearch(origin, destination) {
+            elements['feed-placeholder'].style.display = 'none';
+            elements['panel-search-results'].innerHTML = '';
+            elements['results-count'].textContent = '';
+            updateStatus(`Buscando ${origin}→${destination}...`, 'blue');
+
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                const response = await fetch(`${API_BASE_URL}/api/search-flights?origin=${origin}&destination=${destination}&departureDate=${today}`);
+                if (!response.ok) throw new Error(`API Error: ${response.status}`);
+                
+                const responseData = await response.json();
+                const offers = responseData.data;
+
+                if (!offers || offers.length === 0) {
+                    updateStatus(`Nenhuma oferta encontrada.`, 'gray');
+                    elements['feed-placeholder'].textContent = `Nenhuma oferta encontrada para ${origin}→${destination}.`;
+                    elements['feed-placeholder'].style.display = 'block';
+                    return;
+                }
+                
+                elements['panel-search-results'].innerHTML = offers.map(renderFlightCard).join('');
+                elements['results-count'].textContent = `${offers.length} ofertas encontradas`;
+                lucide.createIcons();
+                updateStatus('Busca concluída!', 'green');
+
+            } catch (error) {
+                console.error("Falha ao buscar promoções:", error);
+                updateStatus('Erro ao buscar. Verifique o console.', 'red');
+            }
+        }
+
+        function renderFlightCard(flightData) {
+            try {
+                const { price, itineraries, validatingAirlineCodes } = flightData;
+                const originCode = itineraries[0].segments[0].departure.iataCode;
+                const destinationCode = itineraries[0].segments[itineraries[0].segments.length - 1].arrival.iataCode;
+                const promoUrl = `https://www.google.com/flights#flt=${originCode}.${destinationCode}.${new Date().toISOString().split('T')[0]}`;
+
+                return `
+                    <div class="card-item bg-slate-900 border border-slate-800 rounded-2xl shadow-lg flex flex-col">
+                        <div class="p-5">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm font-semibold text-slate-300">${validatingAirlineCodes[0]}</span>
+                                <span class="text-xs font-semibold uppercase px-2 py-1 rounded-full bg-slate-800 text-slate-400">Econômica</span>
+                            </div>
+                            <div class="my-4 text-center">
+                                <div class="flex items-center justify-center gap-2 text-xl font-bold text-white">
+                                    <span>${originCode}</span>
+                                    <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500"></i>
+                                    <span>${destinationCode}</span>
+                                </div>
+                            </div>
+                            <div class="bg-slate-800/50 rounded-lg p-3 text-center">
+                                <div class="text-xl text-white font-bold">R$ ${parseFloat(price.total).toFixed(2)}</div>
+                                <div class="text-xs text-slate-400">Em dinheiro</div>
+                            </div>
+                        </div>
+                        <div class="mt-auto bg-slate-800/50 p-4 rounded-b-2xl">
+                             <a href="${promoUrl}" target="_blank" class="w-full bg-brand-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-brand-500 transition-colors flex items-center justify-center text-sm">Ver Oferta</a>
+                        </div>
+                    </div>
+                `;
+            } catch (e) {
+                console.error("Erro ao renderizar card:", flightData, e);
+                return '';
+            }
+        }
+        
+        function renderMyAlerts() {
+            if (myAlerts.length === 0) {
+                elements['panel-my-alerts'].innerHTML = '<p class="text-center text-slate-500">Você ainda não criou nenhum alerta.</p>';
+                return;
+            }
+            elements['panel-my-alerts'].innerHTML = myAlerts.map((alertData, index) => `
+                <div class="card-item bg-slate-900 border border-slate-800 rounded-2xl shadow-lg p-5">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="text-lg font-bold text-white">${alertData.origin} → ${alertData.destination}</div>
+                        </div>
+                        <button data-index="${index}" class="remove-alert-btn text-slate-500 hover:text-rose-500 text-2xl">&times;</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function saveAlertsToLocalStorage() {
+            localStorage.setItem('monitorGlobalAlerts', JSON.stringify(myAlerts));
+        }
+
+        function loadAlertsFromLocalStorage() {
+            const savedAlerts = localStorage.getItem('monitorGlobalAlerts');
+            if (savedAlerts) {
+                myAlerts = JSON.parse(savedAlerts);
+            }
+        }
+        
+        // --- EVENTOS ---
+        elements['search-form'].addEventListener('submit', (e) => {
+            e.preventDefault();
+            const origin = document.getElementById('origin').value.toUpperCase().trim();
+            const destination = document.getElementById('destination').value.toUpperCase().trim();
+            if (origin && destination) {
+                handleSearch(origin, destination);
+            }
         });
-        html += "</ul>";
-        document.getElementById("result").innerHTML = html;
+        
+        elements['nav-search'].addEventListener('click', () => {
+             elements['main-title'].textContent = 'Resultados da Busca';
+             elements['panel-search-results'].classList.remove('hidden');
+             elements['feed-placeholder'].style.display = 'block';
+             elements['panel-my-alerts'].classList.add('hidden');
+             elements['nav-search'].classList.add('active');
+             elements['nav-alerts'].classList.remove('active');
+        });
 
-      } catch (err) {
-        document.getElementById("result").innerText = "❌ Falha na conexão com o servidor.";
-        console.error(err);
-      }
-    }
-  </script>
-</head>
-<body style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px;">
-  <h1>Monitor de Passagens</h1>
-  <p>Preencha os campos para buscar ofertas de voos em tempo real (via API Amadeus).</p>
+        elements['nav-alerts'].addEventListener('click', () => {
+            elements['main-title'].textContent = 'Meus Alertas';
+            elements['panel-my-alerts'].classList.remove('hidden');
+            elements['panel-search-results'].classList.add('hidden');
+            elements['feed-placeholder'].style.display = 'none';
+            elements['nav-alerts'].classList.add('active');
+            elements['nav-search'].classList.remove('active');
+            renderMyAlerts();
+        });
+        
+        elements['create-alert-btn'].addEventListener('click', () => {
+            const origin = document.getElementById('origin').value.toUpperCase().trim();
+            const destination = document.getElementById('destination').value.toUpperCase().trim();
+            if (!origin || !destination) {
+                alert('Preencha a origem e o destino para criar um alerta.');
+                return;
+            }
+            elements['alert-summary'].innerHTML = `<p><strong>Rota:</strong> ${origin} → ${destination}</p>`;
+            elements['alert-modal'].classList.remove('hidden');
+        });
 
-  <label>Origem (IATA):</label><br>
-  <input id="origin" placeholder="Ex: GRU"><br><br>
+        elements['close-modal-btn'].addEventListener('click', () => elements['alert-modal'].classList.add('hidden'));
+        
+        elements['confirm-alert-btn'].addEventListener('click', () => {
+            const origin = document.getElementById('origin').value.toUpperCase().trim();
+            const destination = document.getElementById('destination').value.toUpperCase().trim();
+            if (origin && destination && !myAlerts.some(a => a.origin === origin && a.destination === destination)) {
+                 myAlerts.push({ origin, destination });
+                 saveAlertsToLocalStorage();
+            }
+            elements['alert-modal'].classList.add('hidden');
+        });
 
-  <label>Destino (IATA):</label><br>
-  <input id="destination" placeholder="Ex: LIS"><br><br>
+        elements['panel-my-alerts'].addEventListener('click', (e) => {
+            if (e.target.closest('.remove-alert-btn')) {
+                myAlerts.splice(e.target.closest('.remove-alert-btn').dataset.index, 1);
+                saveAlertsToLocalStorage();
+                renderMyAlerts();
+            }
+        });
 
-  <label>Data de partida:</label><br>
-  <input id="departureDate" type="date"><br><br>
-
-  <button onclick="buscarVoos()">Buscar Voos</button>
-
-  <div id="result" style="margin-top: 20px; font-size: 14px;"></div>
+        // --- INICIALIZAÇÃO ---
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAlertsFromLocalStorage();
+            elements['nav-search'].click();
+        });
+    </script>
 </body>
 </html>
+
+
+
