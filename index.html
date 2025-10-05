@@ -141,6 +141,7 @@
                 
                 if (destination) params.append('destination', destination);
                 if (departureDate) params.append('departureDate', departureDate);
+                // Apenas envia returnDate se ele tiver um valor e se for uma busca específica
                 if (returnDate && destination) params.append('returnDate', returnDate);
                 
                 const endpoint = isExploreMode ? '/api/explore-deals' : '/api/search-flights';
@@ -195,7 +196,6 @@
         function saveAirlinesDataToLocalStorage() { /* ...código existente... */ }
         function loadAirlinesDataFromLocalStorage() { /* ...código existente... */ }
         
-        // --- EVENTOS ---
         elements['search-form'].addEventListener('submit', (e) => { e.preventDefault(); const origin = document.getElementById('origin').value.toUpperCase().trim(); const dest = document.getElementById('destination').value.toUpperCase().trim(); const depDate = document.getElementById('departureDate').value; const retDate = document.getElementById('returnDate').value; if (origin) handleSearch(origin, dest, depDate, retDate); });
         
         // --- Código de navegação e inicialização sem alterações
