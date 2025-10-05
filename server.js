@@ -39,7 +39,6 @@ app.get('/api/search-flights', async (req, res) => {
           max: 20
         };
         
-        // ADICIONA A DATA DE VOLTA SE ELA EXISTIR
         if (returnDate) {
           searchParams.returnDate = returnDate;
         }
@@ -56,13 +55,16 @@ app.get('/api/search-flights', async (req, res) => {
   // --- MODO 2: EXPLORAR OFERTAS (se o destino NÃO for fornecido) ---
   else {
       try {
+        // CORREÇÃO APLICADA AQUI: O parâmetro correto é 'originLocationCode'
         const searchParams = {
-            origin: origin,
+            originLocationCode: origin, 
             maxPrice: 5000 
         };
-        if (departureDate) searchParams.departureDate = departureDate;
+        if (departureDate) {
+            searchParams.departureDate = departureDate;
+        }
 
-        console.log(`Explorando ofertas a partir de: ${origin}`);
+        console.log(`Explorando ofertas a partir de:`, searchParams);
         const response = await amadeus.shopping.flightDestinationsSearch.get(searchParams);
         return res.json(response.result || response.data);
 
