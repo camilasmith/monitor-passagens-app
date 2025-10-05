@@ -30,9 +30,6 @@
         ::-webkit-scrollbar-track { background: #1e293b; }
         ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
         .nav-btn.active { color: #3b82f6; background-color: #3b82f61a; }
-        .modal-backdrop { animation: fadeIn 0.3s ease-in-out; }
-        .modal-content { animation: slideInUp 0.3s ease-in-out; }
-        @keyframes slideInUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
 </head>
 <body class="dark">
@@ -48,6 +45,9 @@
                 <button id="nav-alerts" class="nav-btn p-3 rounded-xl hover:bg-slate-800 transition-colors" title="Meus Alertas">
                     <i data-lucide="bell" class="w-6 h-6"></i>
                 </button>
+                <button id="nav-settings" class="nav-btn p-3 rounded-xl hover:bg-slate-800 transition-colors" title="Configurações">
+                    <i data-lucide="settings" class="w-6 h-6"></i>
+                </button>
             </nav>
         </aside>
 
@@ -57,10 +57,15 @@
             <form id="search-form" class="space-y-4 overflow-y-auto pr-2 flex-grow">
                 <div>
                     <label class="text-sm font-medium">Origem / Destino</label>
-                    <div class="flex gap-2 mt-1">
-                        <input type="text" id="origin" placeholder="Origem" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 focus:ring-brand-500 focus:border-brand-500">
-                        <input type="text" id="destination" placeholder="Destino" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 focus:ring-brand-500 focus:border-brand-500">
+                    <div class="flex flex-col gap-2 mt-1">
+                        <input type="text" id="origin" placeholder="Origem (Obrigatório)" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 focus:ring-brand-500 focus:border-brand-500">
+                        <input type="text" id="destination" placeholder="Destino (Opcional)" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 focus:ring-brand-500 focus:border-brand-500">
                     </div>
+                     <p class="text-xs text-slate-500 mt-2">Deixe o destino em branco para explorar as melhores ofertas.</p>
+                </div>
+                <div>
+                    <label class="text-sm font-medium">Data de Partida</label>
+                    <input type="date" id="departureDate" title="Data de Ida" class="w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 focus:ring-brand-500 focus:border-brand-500">
                 </div>
             </form>
              <div class="mt-4 pt-4 border-t border-slate-800">
@@ -86,6 +91,16 @@
             <div id="panel-search-results" class="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-6"></div>
             <p id="feed-placeholder" class="text-center text-slate-500 col-span-full pt-16">Use o painel à esquerda para buscar uma rota.</p>
             <div id="panel-my-alerts" class="hidden space-y-4"></div>
+            <div id="panel-settings" class="hidden">
+                 <form id="settings-form" class="max-w-2xl mx-auto">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="mile-value-inputs">
+                        <!-- Inputs de custo do milheiro serão gerados aqui -->
+                    </div>
+                    <div class="mt-6">
+                        <button type="submit" class="w-full bg-brand-600 text-white font-bold py-3 rounded-lg hover:bg-brand-500 transition-all shadow-lg">Salvar Custos</button>
+                    </div>
+                </form>
+            </div>
         </main>
     </div>
     
@@ -95,11 +110,16 @@
         const API_BASE_URL = 'https://monitor-passagens-server.onrender.com';
         
         const elements = {};
-        ['nav-search', 'nav-alerts', 'search-form', 'main-title', 'panel-search-results', 'panel-my-alerts', 'status-text', 'status-indicator', 'feed-placeholder', 'results-count'].forEach(id => elements[id] = document.getElementById(id));
+        ['nav-search', 'nav-alerts', 'nav-settings', 'search-form', 'main-title', 'panel-search-results', 'panel-my-alerts', 'panel-settings', 'status-text', 'status-indicator', 'feed-placeholder', 'results-count', 'settings-form', 'mile-value-inputs'].forEach(id => {
+            if (document.getElementById(id)) {
+                elements[id] = document.getElementById(id);
+            }
+        });
         
         let myAlerts = [];
         
-        const airlinesData = { 'G3': { name: 'GOL' }, 'LA': { name: 'LATAM' }, 'AD': { name: 'Azul' }, 'TP': { name: 'TAP Air Portugal' }, 'UA': { name: 'United' }, 'CM': { name: 'Copa' }, 'LH': { name: 'Lufthansa' }, 'AV': { name: 'Avianca' }, 'DL': { name: 'Delta' }, 'AF': { name: 'Air France' }, 'KL': { name: 'KLM' }, 'AM': { name: 'Aeromexico' }, 'AA': { name: 'American' }, 'IB': { name: 'Iberia' }, 'BA': { name: 'British Airways' }, 'EK': { name: 'Emirates' }, 'QR': { name: 'Qatar Airways' } };
+        const defaultAirlinesData = { 'G3': { name: 'GOL', program: 'Smiles', mileValue: 18 },'LA': { name: 'LATAM', program: 'LATAM Pass', mileValue: 28 },'AD': { name: 'Azul', program: 'TudoAzul', mileValue: 22 },'TP': { name: 'TAP', program: 'Miles&Go', mileValue: 75 },'UA': { name: 'United', program: 'MileagePlus', mileValue: 120 },'AA': { name: 'American', program: 'AAdvantage', mileValue: 100 },'QR': { name: 'Qatar', program: 'Privilege Club', mileValue: 57 },'IB': { name: 'Iberia', program: 'Iberia Plus', mileValue: 90 },'BA': { name: 'British', program: 'Executive Club', mileValue: 90 } };
+        let airlinesData = { ...defaultAirlinesData };
 
         function updateStatus(message, color = 'gray') {
             if (elements['status-text']) elements['status-text'].textContent = message;
@@ -109,160 +129,130 @@
             }
         }
 
-        async function handleSearch(origin, destination) {
+        async function handleSearch(origin, destination, departureDate) {
             elements['feed-placeholder'].style.display = 'none';
             elements['panel-search-results'].innerHTML = '';
             elements['results-count'].textContent = '';
-            updateStatus(`Buscando ${origin}→${destination}...`, 'blue');
+            const searchType = destination ? `Buscando ${origin}→${destination}...` : `Explorando ofertas de ${origin}...`;
+            updateStatus(searchType, 'blue');
 
             try {
-                const today = new Date().toISOString().split('T')[0];
-                const response = await fetch(`${API_BASE_URL}/api/search-flights?origin=${origin}&destination=${destination}&departureDate=${today}`);
+                const params = new URLSearchParams({ origin });
+                const isExploreMode = !destination;
+                
+                if (destination) params.append('destination', destination);
+                if (departureDate) params.append('departureDate', departureDate);
+                
+                const endpoint = isExploreMode ? '/api/explore-deals' : '/api/search-flights';
+                const response = await fetch(`${API_BASE_URL}${endpoint}?${params.toString()}`);
                 if (!response.ok) throw new Error(`API Error: ${response.status}`);
                 
                 const responseData = await response.json();
-                
-                let offers = [];
-                if (Array.isArray(responseData)) {
-                    offers = responseData;
-                } else if (responseData && Array.isArray(responseData.data)) {
-                    offers = responseData.data;
-                }
+                const offers = responseData.data || (Array.isArray(responseData) ? responseData : []);
 
                 if (offers.length === 0) {
                     updateStatus(`Nenhuma oferta encontrada.`, 'gray');
-                    elements['panel-search-results'].innerHTML = `<p class="text-center text-slate-500 col-span-full pt-16">Nenhuma oferta encontrada para ${origin}→${destination}.</p>`;
-                } else {
-                    elements['panel-search-results'].innerHTML = offers.map(renderFlightCard).join('');
-                    elements['results-count'].textContent = `${offers.length} ofertas encontradas`;
-                    lucide.createIcons();
-                    updateStatus('Busca concluída!', 'green');
+                    elements['panel-search-results'].innerHTML = `<p class="text-center text-slate-500 col-span-full pt-16">Nenhuma oferta encontrada.</p>`;
+                    return;
                 }
                 
-                // Salva a rota automaticamente
-                if (!myAlerts.some(a => a.origin === origin && a.destination === destination)) {
-                    myAlerts.push({ origin, destination });
-                    saveAlertsToLocalStorage();
-                }
+                const cardRenderer = isExploreMode ? renderExploreCard : renderFlightCard;
+                elements['panel-search-results'].innerHTML = offers.map(cardRenderer).join('');
+                elements['results-count'].textContent = `${offers.length} ofertas encontradas`;
+                lucide.createIcons();
+                updateStatus('Busca concluída!', 'green');
 
             } catch (error) {
                 console.error("Falha ao buscar promoções:", error);
                 updateStatus('Erro ao buscar. Verifique o console.', 'red');
             }
         }
-
+        
         function renderFlightCard(flightData) {
             try {
                 const { price, itineraries, validatingAirlineCodes } = flightData;
                 const airlineCode = validatingAirlineCodes[0];
-                const airlineInfo = airlinesData[airlineCode] || { name: airlineCode };
-                const firstSegment = itineraries[0].segments[0];
-                const originCode = firstSegment.departure.iataCode;
-                const destinationCode = itineraries[0].segments[itineraries[0].segments.length - 1].arrival.iataCode;
-                const departureDate = new Date(firstSegment.departure.at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                const promoUrl = `https://www.google.com/flights#flt=${originCode}.${destinationCode}.${new Date(firstSegment.departure.at).toISOString().split('T')[0]}`;
+                const airlineInfo = airlinesData[airlineCode] || { name: airlineCode, program: 'N/A', mileValue: 50 };
+                const firstItinerary = itineraries[0];
+                const originCode = firstItinerary.segments[0].departure.iataCode;
+                const destinationCode = firstItinerary.segments[firstItinerary.segments.length - 1].arrival.iataCode;
+                const departureDate = new Date(firstItinerary.segments[0].departure.at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                const cashPrice = parseFloat(price.total);
+                const estimatedMiles = Math.round(cashPrice / (airlineInfo.mileValue / 1000));
+                const valuePerMile = (cashPrice / estimatedMiles * 1000);
+                const recommendationHTML = valuePerMile < airlineInfo.mileValue ? `<div class="text-sm font-semibold text-green-400">Vale a pena em Milhas</div>` : `<div class="text-sm font-semibold text-amber-400">Pague em Dinheiro</div>`;
+                const promoUrl = `https://www.google.com/flights#flt=${originCode}.${destinationCode}.${new Date(firstItinerary.segments[0].departure.at).toISOString().split('T')[0]}`;
+                return `<div class="card-item bg-slate-900 border border-slate-800 rounded-2xl shadow-lg flex flex-col"><div class="p-5 flex flex-col flex-grow"><div class="flex justify-between items-center"><div class="flex items-center gap-2"><img src="https://logo.clearbit.com/${airlineInfo.name.toLowerCase().replace(/\s/g, '')}.com" onerror="this.style.display='none'" class="h-6 w-6 rounded-full bg-slate-700"/><span class="text-sm font-semibold text-slate-300">${airlineInfo.name}</span></div><span class="text-xs font-semibold uppercase px-2 py-1 rounded-full bg-slate-800 text-slate-400">${departureDate}</span></div><div class="my-4 text-center"><div class="flex items-center justify-center gap-2 text-xl font-bold text-white"><span>${originCode}</span><i data-lucide="arrow-right" class="w-5 h-5 text-slate-500"></i><span>${destinationCode}</span></div></div><div class="grid grid-cols-2 gap-4 text-center"><div class="bg-slate-800/50 rounded-lg p-3"><div class="text-lg text-white font-bold">R$ ${cashPrice.toFixed(2)}</div><div class="text-xs text-slate-400">Em dinheiro</div></div><div class="bg-slate-800/50 rounded-lg p-3"><div class="text-lg text-white font-bold">${estimatedMiles.toLocaleString('pt-BR')}</div><div class="text-xs text-slate-400">${airlineInfo.program}</div></div></div><div class="text-center mt-3">${recommendationHTML}<div class="text-xs text-slate-500">~R$ ${valuePerMile.toFixed(2)} / milheiro</div></div></div><div class="mt-auto bg-slate-800/50 p-4 rounded-b-2xl"><a href="${promoUrl}" target="_blank" class="w-full bg-brand-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-brand-500 transition-colors flex items-center justify-center text-sm">Ver Oferta</a></div></div>`;
+            } catch (e) { console.error(e); return ''; }
+        }
 
-                return `
-                    <div class="card-item bg-slate-900 border border-slate-800 rounded-2xl shadow-lg flex flex-col">
-                        <div class="p-5">
-                            <div class="flex justify-between items-center">
-                                <div class="flex items-center gap-2">
-                                    <img src="https://logo.clearbit.com/${airlineInfo.name.toLowerCase().replace(/\s/g, '')}.com" onerror="this.style.display='none'" class="h-6 w-6 rounded-full bg-slate-700"/>
-                                    <span class="text-sm font-semibold text-slate-300">${airlineInfo.name}</span>
-                                </div>
-                                <span class="text-xs font-semibold uppercase px-2 py-1 rounded-full bg-slate-800 text-slate-400">Econômica</span>
-                            </div>
-                            <div class="my-4 text-center">
-                                <div class="flex items-center justify-center gap-2 text-xl font-bold text-white">
-                                    <span>${originCode}</span>
-                                    <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500"></i>
-                                    <span>${destinationCode}</span>
-                                </div>
-                                <div class="text-sm text-slate-400 mt-1">Data: ${departureDate}</div>
-                            </div>
-                            <div class="bg-slate-800/50 rounded-lg p-3 text-center">
-                                <div class="text-xl text-white font-bold">R$ ${parseFloat(price.total).toFixed(2)}</div>
-                                <div class="text-xs text-slate-400">Em dinheiro</div>
-                            </div>
-                        </div>
-                        <div class="mt-auto bg-slate-800/50 p-4 rounded-b-2xl">
-                             <a href="${promoUrl}" target="_blank" class="w-full bg-brand-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-brand-500 transition-colors flex items-center justify-center text-sm">Ver Oferta</a>
-                        </div>
-                    </div>
-                `;
+        function renderExploreCard(dealData) {
+            try {
+                const { origin, destination, price, departureDate, airline } = dealData;
+                const airlineInfo = airlinesData[airline] || { name: airline };
+                const formattedDate = new Date(departureDate).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                const promoUrl = `https://www.google.com/flights#flt=${origin}.${destination}.${departureDate}`;
+                return `<div class="card-item bg-slate-900 border border-slate-800 rounded-2xl shadow-lg flex flex-col"><div class="p-5 flex flex-col flex-grow"><div class="flex justify-between items-center"><div class="flex items-center gap-2"><img src="https://logo.clearbit.com/${airlineInfo.name.toLowerCase().replace(/\s/g, '')}.com" onerror="this.style.display='none'" class="h-6 w-6 rounded-full bg-slate-700"/><span class="text-sm font-semibold text-slate-300">${airlineInfo.name}</span></div><span class="text-xs font-semibold uppercase px-2 py-1 rounded-full bg-slate-800 text-slate-400">${formattedDate}</span></div><div class="my-4 text-center"><div class="text-slate-400 text-sm">Voe para</div><div class="text-2xl font-bold text-white mt-1">${destination}</div></div><div class="bg-slate-800/50 rounded-lg p-3 text-center"><div class="text-xl text-white font-bold">a partir de R$ ${parseFloat(price.total).toFixed(2)}</div></div></div><div class="mt-auto bg-slate-800/50 p-4 rounded-b-2xl"><a href="${promoUrl}" target="_blank" class="w-full bg-brand-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-brand-500 transition-colors flex items-center justify-center text-sm">Ver Oferta</a></div></div>`;
             } catch (e) { return ''; }
         }
         
-        function renderMyAlerts() {
-            if (myAlerts.length === 0) {
-                elements['panel-my-alerts'].innerHTML = '<p class="text-center text-slate-500">Você ainda não criou nenhum alerta.</p>';
-                return;
-            }
-            elements['panel-my-alerts'].innerHTML = myAlerts.map((alertData, index) => `
-                <div class="card-item bg-slate-900 border border-slate-800 rounded-2xl shadow-lg p-5">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <div class="text-lg font-bold text-white">${alertData.origin} → ${alertData.destination}</div>
-                        </div>
-                        <button data-index="${index}" class="remove-alert-btn text-slate-500 hover:text-rose-500 text-2xl">&times;</button>
-                    </div>
+        function renderSettingsPanel() {
+            elements['mile-value-inputs'].innerHTML = Object.entries(airlinesData).map(([code, data]) => `
+                <div class="flex flex-col">
+                    <label for="mile-value-${code}" class="text-sm font-medium text-slate-300 mb-1">${data.program} (${code})</label>
+                    <input type="number" step="0.1" id="mile-value-${code}" data-code="${code}" value="${data.mileValue}" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 focus:ring-brand-500 focus:border-brand-500">
                 </div>
             `).join('');
         }
         
-        function saveAlertsToLocalStorage() {
-            localStorage.setItem('monitorGlobalAlerts', JSON.stringify(myAlerts));
+        function saveAirlinesDataToLocalStorage() { localStorage.setItem('customAirlinesData', JSON.stringify(airlinesData)); }
+        function loadAirlinesDataFromLocalStorage() { const saved = localStorage.getItem('customAirlinesData'); if (saved) airlinesData = {...defaultAirlinesData, ...JSON.parse(saved)}; }
+
+        // --- Eventos ---
+        elements['search-form'].addEventListener('submit', (e) => { e.preventDefault(); const origin = document.getElementById('origin').value.toUpperCase().trim(); const dest = document.getElementById('destination').value.toUpperCase().trim(); const date = document.getElementById('departureDate').value; if (origin) handleSearch(origin, dest, date); });
+        
+        const navButtons = [elements['nav-search'], elements['nav-alerts'], elements['nav-settings']];
+        const panels = [elements['panel-search-results'], elements['panel-my-alerts'], elements['panel-settings']];
+        
+        navButtons.forEach((button, index) => {
+            if (!button) return;
+            button.addEventListener('click', () => {
+                navButtons.forEach(btn => btn && btn.classList.remove('active'));
+                button.classList.add('active');
+                
+                panels.forEach(panel => panel && panel.classList.add('hidden'));
+                if (panels[index]) panels[index].classList.remove('hidden');
+
+                elements['feed-placeholder'].style.display = (button.id !== 'nav-search' || elements['panel-search-results'].innerHTML !== '') ? 'none' : 'block';
+                
+                const titles = {'nav-search': 'Resultados da Busca', 'nav-alerts': 'Meus Alertas', 'nav-settings': 'Configurar Custo do Milheiro'};
+                elements['main-title'].textContent = titles[button.id] || 'Resultados';
+                elements['results-count'].style.display = (button.id === 'nav-search') ? 'inline' : 'none';
+
+                if (button.id === 'nav-settings') renderSettingsPanel();
+            });
+        });
+        
+        if(elements['settings-form']) {
+            elements['settings-form'].addEventListener('submit', (e) => {
+                e.preventDefault();
+                const inputs = elements['mile-value-inputs'].querySelectorAll('input');
+                inputs.forEach(input => {
+                    const code = input.dataset.code;
+                    const value = parseFloat(input.value);
+                    if (airlinesData[code] && !isNaN(value)) airlinesData[code].mileValue = value;
+                });
+                saveAirlinesDataToLocalStorage();
+                alert('Custos do milheiro salvos com sucesso!');
+            });
         }
 
-        function loadAlertsFromLocalStorage() {
-            const savedAlerts = localStorage.getItem('monitorGlobalAlerts');
-            if (savedAlerts) myAlerts = JSON.parse(savedAlerts);
-        }
-        
-        elements['search-form'].addEventListener('submit', (e) => {
-            e.preventDefault();
-            const origin = document.getElementById('origin').value.toUpperCase().trim();
-            const destination = document.getElementById('destination').value.toUpperCase().trim();
-            if (origin && destination) handleSearch(origin, destination);
-        });
-        
-        elements['nav-search'].addEventListener('click', () => {
-             elements['main-title'].textContent = 'Resultados da Busca';
-             elements['panel-search-results'].classList.remove('hidden');
-             elements['feed-placeholder'].style.display = 'block';
-             elements['panel-my-alerts'].classList.add('hidden');
-             elements['nav-search'].classList.add('active');
-             elements['nav-alerts'].classList.remove('active');
-             elements['results-count'].textContent = '';
-             elements['panel-search-results'].innerHTML = '';
-             elements['feed-placeholder'].textContent = 'Use o painel à esquerda para buscar uma rota.';
-        });
-
-        elements['nav-alerts'].addEventListener('click', () => {
-            elements['main-title'].textContent = 'Meus Alertas';
-            elements['panel-my-alerts'].classList.remove('hidden');
-            elements['panel-search-results'].classList.add('hidden');
-            elements['feed-placeholder'].style.display = 'none';
-            elements['nav-alerts'].classList.add('active');
-            elements['nav-search'].classList.remove('active');
-            renderMyAlerts();
-        });
-        
-        elements['panel-my-alerts'].addEventListener('click', (e) => {
-            const removeBtn = e.target.closest('.remove-alert-btn');
-            if (removeBtn) {
-                myAlerts.splice(removeBtn.dataset.index, 1);
-                saveAlertsToLocalStorage();
-                renderMyAlerts();
-            }
-        });
-
+        // --- INICIALIZAÇÃO ---
         document.addEventListener('DOMContentLoaded', () => {
-            loadAlertsFromLocalStorage();
-            elements['nav-search'].click();
+            loadAirlinesDataFromLocalStorage();
+            if (elements['nav-search']) elements['nav-search'].click();
         });
     </script>
 </body>
 </html>
-
 
