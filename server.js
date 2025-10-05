@@ -6,26 +6,22 @@ const Amadeus = require('amadeus');
 const app = express();
 const port = process.env.PORT || 10000;
 
-// Validação crítica das chaves da API na inicialização
 if (!process.env.AMADEUS_API_KEY || !process.env.AMADEUS_API_SECRET) {
-    console.error("ERRO CRÍTICO: As variáveis de ambiente AMADEUS_API_KEY e AMADEUS_API_SECRET não foram definidas!");
-    process.exit(1); // Encerra o servidor se as chaves não estiverem presentes
+    console.error("ERRO CRÍTICO: As variáveis de ambiente da Amadeus não foram definidas!");
+    process.exit(1);
 }
 
-// Configuração do CORS para permitir acesso do seu frontend
 app.use(cors());
 
-// Inicialização do cliente Amadeus
 const amadeus = new Amadeus({
   clientId: process.env.AMADEUS_API_KEY,
   clientSecret: process.env.AMADEUS_API_SECRET
 });
 
-// --- ROTA UNIFICADA E INTELIGENTE PARA BUSCAS ---
+// ROTA UNIFICADA E INTELIGENTE PARA BUSCAS
 app.get('/api/search-flights', async (req, res) => {
-  const { origin, destination, departureDate } = req.query;
+  const { origin, destination, departureDate, returnDate } = req.query;
 
-  // Origem é sempre obrigatória
   if (!origin) {
     return res.status(400).json({ error: 'O parâmetro de origem é obrigatório.' });
   }
@@ -36,14 +32,19 @@ app.get('/api/search-flights', async (req, res) => {
         const searchParams = {
           originLocationCode: origin,
           destinationLocationCode: destination,
-          departureDate: departureDate || new Date().toISOString().split('T')[0], // Usa data de hoje se não for especificada
+          departureDate: departureDate || new Date().toISOString().split('T')[0],
           adults: '1',
           nonStop: false,
           currencyCode: 'BRL',
           max: 20
         };
         
-        console.log(`Buscando voo específico: ${origin} -> ${destination}`);
+        // ADICIONA A DATA DE VOLTA SE ELA EXISTIR
+        if (returnDate) {
+          searchParams.returnDate = returnDate;
+        }
+        
+        console.log(`Buscando voo:`, searchParams);
         const response = await amadeus.shopping.flightOffersSearch.get(searchParams);
         return res.json(response.result || response.data);
 
@@ -57,11 +58,9 @@ app.get('/api/search-flights', async (req, res) => {
       try {
         const searchParams = {
             origin: origin,
-            maxPrice: 5000 // Limite de preço para focar em promoções
+            maxPrice: 5000 
         };
-        if (departureDate) {
-            searchParams.departureDate = departureDate;
-        }
+        if (departureDate) searchParams.departureDate = departureDate;
 
         console.log(`Explorando ofertas a partir de: ${origin}`);
         const response = await amadeus.shopping.flightDestinationsSearch.get(searchParams);
