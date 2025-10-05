@@ -10,7 +10,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>
-        tailwind.config = { darkMode: 'class', theme: { extend: { colors: { 'brand': { '500': '#3b82f6', '600': '#2563eb' }, 'gray': { '850': '#182134', '950': '#0b111e' } } } } }
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'brand': { '500': '#3b82f6', '600': '#2563eb' },
+                        'gray': { '850': '#182134', '950': '#0b111e' }
+                    }
+                }
+            }
+        }
     </script>
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #cbd5e1; }
@@ -65,6 +75,9 @@
                 <button type="submit" form="search-form" class="w-full bg-brand-600 text-white font-bold py-3 rounded-lg hover:bg-brand-500 transition-all shadow-lg flex items-center justify-center">
                     <i data-lucide="search" class="w-5 h-5 mr-2"></i>Buscar Agora
                 </button>
+                 <button type="button" id="create-alert-btn" class="w-full mt-2 bg-slate-700 text-slate-300 font-bold py-3 rounded-lg hover:bg-slate-600 transition-all flex items-center justify-center">
+                    <i data-lucide="bell-plus" class="w-5 h-5 mr-2"></i>Criar Alerta
+                </button>
             </div>
         </section>
 
@@ -81,139 +94,202 @@
                 </div>
             </header>
 
-            <div id="panel-search-results">
-                <div class="mb-8">
-                    <h3 class="text-xl font-bold text-white mb-4">🔥 Oportunidades Exclusivas</h3>
-                    <div id="exclusive-feed" class="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-6">
-                        <!-- Oportunidades exclusivas simuladas aparecerão aqui -->
-                    </div>
-                </div>
-                <div>
-                    <h3 class="text-xl font-bold text-white mb-4">Resultados da sua Busca</h3>
-                    <div id="search-feed" class="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-6"></div>
-                    <p id="feed-placeholder" class="text-center text-slate-500 col-span-full pt-16">Use o painel à esquerda para buscar uma rota.</p>
-                </div>
+            <div id="panel-search-results" class="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-6">
+                <p id="feed-placeholder" class="text-center text-slate-500 col-span-full pt-16">Use o painel à esquerda para buscar uma rota.</p>
             </div>
-            
             <div id="panel-my-alerts" class="hidden space-y-4"></div>
-            <div id="panel-settings" class="hidden"></div>
+            <div id="panel-settings" class="hidden">
+                <form id="settings-form" class="max-w-2xl mx-auto">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="mile-value-inputs"></div>
+                    <div class="mt-6">
+                        <button type="submit" class="w-full bg-brand-600 text-white font-bold py-3 rounded-lg hover:bg-brand-500 transition-all shadow-lg">Salvar Custos</button>
+                    </div>
+                </form>
+            </div>
         </main>
     </div>
     
     <script>
-        lucide.createIcons();
-
-        const API_BASE_URL = 'https://monitor-passagens-server.onrender.com';
-        
-        const elements = {};
-        ['nav-search', 'nav-alerts', 'nav-settings', 'search-form', 'main-title', 'panel-search-results', 'search-feed', 'exclusive-feed', 'panel-my-alerts', 'panel-settings', 'status-text', 'status-indicator', 'feed-placeholder', 'results-count'].forEach(id => {
-            if (document.getElementById(id)) elements[id] = document.getElementById(id);
-        });
-        
-        const defaultAirlinesData = { 'G3': { name: 'GOL', program: 'Smiles', mileValue: 18 },'LA': { name: 'LATAM', program: 'LATAM Pass', mileValue: 28 },'AD': { name: 'Azul', program: 'TudoAzul', mileValue: 22 },'TP': { name: 'TAP', program: 'Miles&Go', mileValue: 75 },'UA': { name: 'United', program: 'MileagePlus', mileValue: 120 },'AA': { name: 'American', program: 'AAdvantage', mileValue: 100 },'QR': { name: 'Qatar', program: 'Privilege Club', mileValue: 57 },'IB': { name: 'Iberia', program: 'Iberia Plus', mileValue: 90 },'BA': { name: 'British', program: 'Executive Club', mileValue: 90 }, 'AC': { name: 'Air Canada', program: 'Aeroplan', mileValue: 110 } };
-        let airlinesData = { ...defaultAirlinesData };
-
-        // SIMULAÇÃO DE OFERTAS EXCLUSIVAS QUE UM BACKEND AVANÇADO ENCONTRARIA
-        const mockExclusiveDeals = [
-            { airlineCode: 'QR', originCode: 'GRU', destinationCode: 'MLE', price: { miles: 85000 }, tripType: 'Ida e Volta', departureDate: '2025-11-10', info: 'Executiva (Qsuite)'},
-            { airlineCode: 'TP', originCode: 'GIG', destinationCode: 'LIS', price: { cash: 1450.00 }, tripType: 'Só Ida', departureDate: '2026-02-15', info: 'Tarifa Light'},
-            { airlineCode: 'IB', originCode: 'GRU', destinationCode: 'MAD', price: { miles: 42500 }, tripType: 'Só Ida', departureDate: '2025-12-05', info: 'Executiva (Promo)'},
-        ];
-
-        async function handleSearch(origin, destination, departureDate, returnDate) {
-            elements['feed-placeholder'].style.display = 'none';
-            elements['search-feed'].innerHTML = '';
-            elements['results-count'].textContent = '';
-            updateStatus(`Buscando...`, 'blue');
-
-            try {
-                // Lógica de busca existente...
-                const params = new URLSearchParams({ origin });
-                if (destination) params.append('destination', destination);
-                if (departureDate) params.append('departureDate', departureDate);
-                if (returnDate && destination) params.append('returnDate', returnDate);
-                
-                const endpoint = destination ? '/api/search-flights' : '/api/explore-deals';
-                const response = await fetch(`${API_BASE_URL}${endpoint}?${params.toString()}`);
-                if (!response.ok) throw new Error(`API Error: ${response.status}`);
-                
-                const responseData = await response.json();
-                const offers = responseData.data || (Array.isArray(responseData) ? responseData : []);
-
-                if (offers.length === 0) {
-                    updateStatus(`Nenhuma oferta encontrada.`, 'gray');
-                    elements['search-feed'].innerHTML = `<p class="text-center text-slate-500 col-span-full pt-8">Nenhuma oferta encontrada para sua busca.</p>`;
-                    return;
-                }
-                
-                const cardRenderer = destination ? renderFlightCard : renderExploreCard;
-                elements['search-feed'].innerHTML = offers.map(cardRenderer).join('');
-                elements['results-count'].textContent = `${offers.length} ofertas encontradas`;
-                lucide.createIcons();
-                updateStatus('Busca concluída!', 'green');
-
-            } catch (error) {
-                console.error("Falha ao buscar promoções:", error);
-                updateStatus('Erro ao buscar. Verifique o console.', 'red');
-            }
-        }
-        
-        function renderFlightCard(flightData) { /* ...código existente sem alterações... */ }
-        function renderExploreCard(dealData) { /* ...código existente sem alterações... */ }
-
-        function renderExclusiveCard(deal) {
-            const airlineInfo = airlinesData[deal.airlineCode] || { name: deal.airlineCode, program: 'N/A' };
-            const isMiles = 'miles' in deal.price;
-            const priceText = isMiles ? `${deal.price.miles.toLocaleString('pt-BR')} <span class="text-base font-normal">${airlineInfo.program}</span>` : `R$ ${deal.price.cash.toFixed(2)}`;
-            const promoUrl = `https://www.google.com/flights#flt=${deal.originCode}.${deal.destinationCode}.${deal.departureDate}`;
-
-            return `
-                <div class="card-item bg-slate-900 border-2 border-amber-500/50 rounded-2xl shadow-lg flex flex-col relative overflow-hidden">
-                    <div class="absolute top-2 right-2 text-xs font-bold uppercase px-2 py-1 rounded-full bg-amber-500/10 text-amber-400">🔥 Oportunidade</div>
-                    <div class="p-5 flex flex-col flex-grow">
-                        <div class="flex items-center gap-2 mb-4">
-                            <img src="https://logo.clearbit.com/${airlineInfo.name.toLowerCase().replace(/\s/g, '')}.com" onerror="this.style.display='none'" class="h-6 w-6 rounded-full bg-slate-700"/>
-                            <span class="text-sm font-semibold text-slate-300">${airlineInfo.name}</span>
-                        </div>
-                        <div class="text-center">
-                            <div class="flex items-center justify-center gap-2 text-xl font-bold text-white">
-                                <span>${deal.originCode}</span>
-                                <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500"></i>
-                                <span>${deal.destinationCode}</span>
-                            </div>
-                            <div class="text-xs text-slate-400 mt-1">${deal.info} - ${deal.tripType}</div>
-                        </div>
-                        <div class="my-4 bg-slate-800/50 rounded-lg p-3 text-center">
-                            <div class="text-2xl text-white font-bold">${priceText}</div>
-                        </div>
-                        <a href="${promoUrl}" target="_blank" class="mt-auto w-full bg-brand-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-brand-500 transition-colors flex items-center justify-center text-sm">Ver Detalhes</a>
-                    </div>
-                </div>
-            `;
-        }
-        
-        function renderMyAlerts() { /* ...código existente sem alterações... */ }
-        function renderSettingsPanel() { /* ...código existente sem alterações... */ }
-        function saveAirlinesDataToLocalStorage() { /* ...código existente sem alterações... */ }
-        function loadAirlinesDataFromLocalStorage() { /* ...código existente sem alterações... */ }
-        function saveAlertsToLocalStorage() { /* ...código existente sem alterações... */ }
-        function loadAlertsFromLocalStorage() { /* ...código existente sem alterações... */ }
-        
-        // --- EVENTOS ---
-        elements['search-form'].addEventListener('submit', (e) => { e.preventDefault(); const origin = document.getElementById('origin').value.toUpperCase().trim(); const dest = document.getElementById('destination').value.toUpperCase().trim(); const depDate = document.getElementById('departureDate').value; const retDate = document.getElementById('returnDate').value; if (origin) handleSearch(origin, dest, depDate, retDate); });
-        
-        // Código de navegação (sem alterações)
-        const navButtons = [elements['nav-search'], elements['nav-alerts'], elements['nav-settings']];
-        navButtons.forEach((button, index) => { button.addEventListener('click', () => { /* ... */ }); });
-        
-        // --- INICIALIZAÇÃO ---
         document.addEventListener('DOMContentLoaded', () => {
-            elements['exclusive-feed'].innerHTML = mockExclusiveDeals.map(renderExclusiveCard).join('');
             lucide.createIcons();
+
+            const API_BASE_URL = 'https://monitor-passagens-server.onrender.com';
             
-            // Código de inicialização restante (sem alterações)
-            loadAirlinesDataFromLocalStorage();
+            const elements = {};
+            ['nav-search', 'nav-alerts', 'nav-settings', 'search-form', 'main-title', 'panel-search-results', 'panel-my-alerts', 'panel-settings', 'status-text', 'status-indicator', 'feed-placeholder', 'results-count', 'settings-form', 'mile-value-inputs', 'create-alert-btn'].forEach(id => {
+                if (document.getElementById(id)) elements[id] = document.getElementById(id);
+            });
+            
+            let myAlerts = [];
+            
+            const defaultAirlinesData = { 'G3': { name: 'GOL', program: 'Smiles', mileValue: 18 },'LA': { name: 'LATAM', program: 'LATAM Pass', mileValue: 28 },'AD': { name: 'Azul', program: 'TudoAzul', mileValue: 22 },'TP': { name: 'TAP', program: 'Miles&Go', mileValue: 75 },'UA': { name: 'United', program: 'MileagePlus', mileValue: 120 },'AA': { name: 'American', program: 'AAdvantage', mileValue: 100 },'QR': { name: 'Qatar', program: 'Privilege Club', mileValue: 57 },'IB': { name: 'Iberia', program: 'Iberia Plus', mileValue: 90 },'BA': { name: 'British', program: 'Executive Club', mileValue: 90 }, 'AC': { name: 'Air Canada', program: 'Aeroplan', mileValue: 110 } };
+            let airlinesData = { ...defaultAirlinesData };
+
+            function updateStatus(message, color = 'gray') {
+                if (elements['status-text']) elements['status-text'].textContent = message;
+                if (elements['status-indicator']) {
+                    const colors = { gray: 'bg-slate-500', blue: 'bg-blue-500', green: 'bg-green-500', red: 'bg-red-500' };
+                    elements['status-indicator'].innerHTML = `<div class="relative flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full ${colors[color]} opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 ${colors[color]}"></span></div>`;
+                }
+            }
+
+            async function handleSearch(origin, destination, departureDate, returnDate) {
+                elements['feed-placeholder'].style.display = 'none';
+                elements['panel-search-results'].innerHTML = '';
+                elements['results-count'].textContent = '';
+                const searchType = destination ? `Buscando ${origin}→${destination}...` : `Explorando ofertas de ${origin}...`;
+                updateStatus(searchType, 'blue');
+
+                try {
+                    const params = new URLSearchParams({ origin });
+                    const isExploreMode = !destination;
+                    
+                    if (destination) params.append('destination', destination);
+                    if (departureDate) params.append('departureDate', departureDate);
+                    if (returnDate && destination) params.append('returnDate', returnDate);
+                    
+                    const endpoint = isExploreMode ? '/api/explore-deals' : '/api/search-flights';
+                    const response = await fetch(`${API_BASE_URL}${endpoint}?${params.toString()}`);
+                    if (!response.ok) throw new Error(`API Error: ${response.status}`);
+                    
+                    const responseData = await response.json();
+                    const offers = responseData.data || (Array.isArray(responseData) ? responseData : []);
+
+                    if (offers.length === 0) {
+                        updateStatus(`Nenhuma oferta encontrada.`, 'gray');
+                        elements['panel-search-results'].innerHTML = `<p class="text-center text-slate-500 col-span-full pt-16">Nenhuma oferta encontrada para sua busca.</p>`;
+                        return;
+                    }
+                    
+                    const cardRenderer = isExploreMode ? renderExploreCard : renderFlightCard;
+                    elements['panel-search-results'].innerHTML = offers.map(cardRenderer).join('');
+                    elements['results-count'].textContent = `${offers.length} ofertas encontradas`;
+                    lucide.createIcons();
+                    updateStatus('Busca concluída!', 'green');
+
+                } catch (error) {
+                    console.error("Falha ao buscar promoções:", error);
+                    updateStatus('Erro ao buscar. Verifique o console.', 'red');
+                }
+            }
+            
+            function renderFlightCard(flightData) {
+                try {
+                    const { price, itineraries, validatingAirlineCodes } = flightData;
+                    const airlineCode = validatingAirlineCodes[0];
+                    const airlineInfo = airlinesData[airlineCode] || { name: airlineCode, program: 'N/A', mileValue: 50 };
+                    const firstItinerary = itineraries[0];
+                    const secondItinerary = itineraries.length > 1 ? itineraries[1] : null;
+                    const originCode = firstItinerary.segments[0].departure.iataCode;
+                    const destinationCode = firstItinerary.segments[firstItinerary.segments.length - 1].arrival.iataCode;
+                    const departureDate = new Date(firstItinerary.segments[0].departure.at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                    const returnDate = secondItinerary ? new Date(secondItinerary.segments[0].departure.at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) : null;
+                    const dateText = returnDate ? `${departureDate} - ${returnDate}` : departureDate;
+                    const tripType = returnDate ? 'Ida e Volta' : 'Só Ida';
+                    const cashPrice = parseFloat(price.total);
+                    const estimatedMiles = Math.round(cashPrice / (airlineInfo.mileValue / 1000));
+                    const valuePerMile = (cashPrice / estimatedMiles * 1000);
+                    const recommendationHTML = valuePerMile < airlineInfo.mileValue ? `<div class="text-sm font-semibold text-green-400">Vale a pena em Milhas</div>` : `<div class="text-sm font-semibold text-amber-400">Pague em Dinheiro</div>`;
+                    const promoUrl = `https://www.google.com/flights#flt=${originCode}.${destinationCode}.${new Date(firstItinerary.segments[0].departure.at).toISOString().split('T')[0]}${returnDate ? `*${destinationCode}.${originCode}.${new Date(secondItinerary.segments[0].departure.at).toISOString().split('T')[0]}` : ''}`;
+                    return `<div class="card-item bg-slate-900 border border-slate-800 rounded-2xl shadow-lg flex flex-col"><div class="p-5 flex flex-col flex-grow"><div class="flex justify-between items-center"><div class="flex items-center gap-2"><img src="https://logo.clearbit.com/${airlineInfo.name.toLowerCase().replace(/\s/g, '')}.com" onerror="this.style.display='none'" class="h-6 w-6 rounded-full bg-slate-700"/><span class="text-sm font-semibold text-slate-300">${airlineInfo.name}</span></div><span class="text-xs font-semibold uppercase px-2 py-1 rounded-full bg-slate-800 text-slate-400">${tripType}</span></div><div class="my-4 text-center"><div class="flex items-center justify-center gap-2 text-xl font-bold text-white"><span>${originCode}</span><i data-lucide="arrow-right" class="w-5 h-5 text-slate-500"></i><span>${destinationCode}</span></div><div class="text-sm text-slate-400 mt-1">${dateText}</div></div><div class="grid grid-cols-2 gap-4 text-center"><div class="bg-slate-800/50 rounded-lg p-3"><div class="text-lg text-white font-bold">R$ ${cashPrice.toFixed(2)}</div><div class="text-xs text-slate-400">Em dinheiro</div></div><div class="bg-slate-800/50 rounded-lg p-3"><div class="text-lg text-white font-bold">${estimatedMiles.toLocaleString('pt-BR')}</div><div class="text-xs text-slate-400">${airlineInfo.program}</div></div></div><div class="text-center mt-3">${recommendationHTML}<div class="text-xs text-slate-500">~R$ ${valuePerMile.toFixed(2)} / milheiro</div></div></div><div class="mt-auto bg-slate-800/50 p-4 rounded-b-2xl"><a href="${promoUrl}" target="_blank" class="w-full bg-brand-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-brand-500 transition-colors flex items-center justify-center text-sm">Ver Oferta</a></div></div>`;
+                } catch (e) { console.error(e); return ''; }
+            }
+
+            function renderExploreCard(dealData) {
+                try {
+                    const { origin, destination, price, departureDate, airline } = dealData;
+                    const airlineInfo = airlinesData[airline] || { name: airline };
+                    const formattedDate = new Date(departureDate).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                    const promoUrl = `https://www.google.com/flights#flt=${origin}.${destination}.${departureDate}`;
+                    return `<div class="card-item bg-slate-900 border border-slate-800 rounded-2xl shadow-lg flex flex-col"><div class="p-5 flex flex-col flex-grow"><div class="flex justify-between items-center"><div class="flex items-center gap-2"><img src="https://logo.clearbit.com/${airlineInfo.name.toLowerCase().replace(/\s/g, '')}.com" onerror="this.style.display='none'" class="h-6 w-6 rounded-full bg-slate-700"/><span class="text-sm font-semibold text-slate-300">${airlineInfo.name}</span></div><span class="text-xs font-semibold uppercase px-2 py-1 rounded-full bg-slate-800 text-slate-400">${formattedDate}</span></div><div class="my-4 text-center"><div class="text-slate-400 text-sm">Voe para</div><div class="text-2xl font-bold text-white mt-1">${destination}</div></div><div class="bg-slate-800/50 rounded-lg p-3 text-center"><div class="text-xl text-white font-bold">a partir de R$ ${parseFloat(price.total).toFixed(2)}</div></div></div><div class="mt-auto bg-slate-800/50 p-4 rounded-b-2xl"><a href="${promoUrl}" target="_blank" class="w-full bg-brand-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-brand-500 transition-colors flex items-center justify-center text-sm">Ver Oferta</a></div></div>`;
+                } catch (e) { return ''; }
+            }
+            
+            function renderMyAlerts() {
+                if (myAlerts.length === 0) {
+                    elements['panel-my-alerts'].innerHTML = '<p class="text-center text-slate-500">Você ainda não criou nenhum alerta.</p>'; return;
+                }
+                elements['panel-my-alerts'].innerHTML = myAlerts.map((alertData, index) => `<div class="card-item bg-slate-900 border border-slate-800 rounded-2xl shadow-lg p-5"><div class="flex justify-between items-start"><div><div class="text-lg font-bold text-white">${alertData.origin} → ${alertData.destination}</div></div><button data-index="${index}" class="remove-alert-btn text-slate-500 hover:text-rose-500 text-2xl">&times;</button></div></div>`).join('');
+            }
+            
+            function renderSettingsPanel() {
+                elements['mile-value-inputs'].innerHTML = Object.entries(airlinesData).map(([code, data]) => `<div class="flex flex-col"><label for="mile-value-${code}" class="text-sm font-medium text-slate-300 mb-1">${data.program} (${code})</label><input type="number" step="0.1" id="mile-value-${code}" data-code="${code}" value="${data.mileValue}" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 focus:ring-brand-500 focus:border-brand-500"></div>`).join('');
+            }
+            
+            function saveAlertsToLocalStorage() { localStorage.setItem('monitorGlobalAlerts', JSON.stringify(myAlerts)); }
+            function loadAlertsFromLocalStorage() { const saved = localStorage.getItem('monitorGlobalAlerts'); if (saved) myAlerts = JSON.parse(saved); }
+            function saveAirlinesDataToLocalStorage() { localStorage.setItem('customAirlinesData', JSON.stringify(airlinesData)); }
+            function loadAirlinesDataFromLocalStorage() { const saved = localStorage.getItem('customAirlinesData'); if (saved) airlinesData = {...defaultAirlinesData, ...JSON.parse(saved)}; }
+            
+            elements['search-form'].addEventListener('submit', (e) => { e.preventDefault(); const origin = document.getElementById('origin').value.toUpperCase().trim(); const dest = document.getElementById('destination').value.toUpperCase().trim(); const depDate = document.getElementById('departureDate').value; const retDate = document.getElementById('returnDate').value; if (origin) handleSearch(origin, dest, depDate, retDate); });
+            
+            const navButtons = [elements['nav-search'], elements['nav-alerts'], elements['nav-settings']];
+            const panels = [elements['panel-search-results'], elements['panel-my-alerts'], elements['panel-settings']];
+            
+            navButtons.forEach((button, index) => {
+                if (!button) return;
+                button.addEventListener('click', () => {
+                    navButtons.forEach(btn => btn && btn.classList.remove('active'));
+                    button.classList.add('active');
+                    
+                    panels.forEach(panel => panel && panel.classList.add('hidden'));
+                    if (panels[index]) panels[index].classList.remove('hidden');
+
+                    elements['feed-placeholder'].style.display = (button.id !== 'nav-search' || (elements['search-feed'] && elements['search-feed'].innerHTML !== '')) ? 'none' : 'block';
+                    
+                    const titles = {'nav-search': 'Oportunidades', 'nav-alerts': 'Meus Alertas', 'nav-settings': 'Configurar Custo do Milheiro'};
+                    elements['main-title'].textContent = titles[button.id] || 'Resultados';
+                    elements['results-count'].style.display = (button.id === 'nav-search') ? 'inline' : 'none';
+
+                    if (button.id === 'nav-alerts') renderMyAlerts();
+                    if (button.id === 'nav-settings') renderSettingsPanel();
+                });
+            });
+            
+            if(elements['settings-form']) {
+                elements['settings-form'].addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    elements['mile-value-inputs'].querySelectorAll('input').forEach(input => {
+                        const code = input.dataset.code;
+                        const value = parseFloat(input.value);
+                        if (airlinesData[code] && !isNaN(value)) airlinesData[code].mileValue = value;
+                    });
+                    saveAirlinesDataToLocalStorage();
+                    alert('Custos do milheiro salvos com sucesso!');
+                });
+            }
+
+            if(elements['create-alert-btn']) {
+                elements['create-alert-btn'].addEventListener('click', () => {
+                     const origin = document.getElementById('origin').value.toUpperCase().trim();
+                     const destination = document.getElementById('destination').value.toUpperCase().trim();
+                     if (!origin || !destination) {
+                        alert('Preencha a origem e o destino para criar um alerta.');
+                        return;
+                    }
+                    if (myAlerts.some(a => a.origin === origin && a.destination === destination)) {
+                        alert('Este alerta já existe.');
+                        return;
+                    }
+                    myAlerts.push({ origin, destination });
+                    saveAlertsToLocalStorage();
+                    alert('Alerta criado com sucesso! Ele aparecerá na aba "Meus Alertas".');
+                });
+            }
+            
+            if (elements['panel-my-alerts']) {
+                elements['panel-my-alerts'].addEventListener('click', (e) => {
+                    const removeBtn = e.target.closest('.remove-alert-btn');
+                    if (removeBtn) {
+                        myAlerts.splice(removeBtn.dataset.index, 1);
+                        saveAlertsToLocalStorage();
+                        renderMyAlerts();
+                    }
+                });
+            }
+            
             loadAlertsFromLocalStorage();
+            loadAirlinesDataFromLocalStorage();
             if (elements['nav-search']) elements['nav-search'].click();
         });
     </script>
