@@ -55,9 +55,9 @@ app.get('/api/search-flights', async (req, res) => {
   // --- MODO 2: EXPLORAR OFERTAS (se o destino NÃO for fornecido) ---
   else {
       try {
-        // CORREÇÃO APLICADA AQUI: O parâmetro correto é 'originLocationCode'
+        // CORREÇÃO APLICADA AQUI: O parâmetro correto é 'origin'
         const searchParams = {
-            originLocationCode: origin, 
+            origin: origin, 
             maxPrice: 5000 
         };
         if (departureDate) {
