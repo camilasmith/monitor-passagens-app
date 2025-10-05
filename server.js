@@ -6,24 +6,16 @@ const Amadeus = require('amadeus');
 const app = express();
 const port = process.env.PORT || 10000;
 
-// --- CONFIGURAÇÃO DO CORS (A CORREÇÃO ESTÁ AQUI) ---
-// Define qual site tem permissão para acessar este servidor.
-const allowedOrigins = ['https://sr-monitor-de-voos.onrender.com'];
+// --- VERIFICAÇÃO DAS CHAVES DE API ---
+if (!process.env.AMADEUS_API_KEY || !process.env.AMADEUS_API_SECRET) {
+    console.error("ERRO CRÍTICO: As variáveis de ambiente AMADEUS_API_KEY e AMADEUS_API_SECRET não foram definidas!");
+    process.exit(1); // Encerra o servidor se as chaves não estiverem presentes
+}
 
-const corsOptions = {
-  origin: function (origin, callback) {
-    // Permite requisições sem 'origin' (como apps mobile ou Postman) e da nossa origem permitida
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Não permitido pela política de CORS'));
-    }
-  }
-};
-
-// Aplica o middleware do CORS com as opções definidas
-app.use(cors(corsOptions));
-
+// --- CONFIGURAÇÃO DO CORS ---
+// Permitindo de forma mais aberta para garantir a conexão.
+// Em produção, você pode restringir para o seu domínio específico.
+app.use(cors());
 
 // --- CONFIGURAÇÃO DO AMADEUS ---
 const amadeus = new Amadeus({
@@ -46,18 +38,32 @@ app.get('/api/search-flights', async (req, res) => {
       departureDate: departureDate,
       adults: '1',
       nonStop: false,
-      max: 20 // Limita o número de resultados para agilizar
+      currencyCode: 'BRL', // Especifica a moeda para Reais
+      max: 20
     });
     
-    // A Amadeus pode retornar um objeto com uma propriedade 'data' ou a resposta direta
     res.json(response.result || response.data);
 
   } catch (error) {
-    console.error("Erro na busca da Amadeus:", error.response ? error.response.body : error.message);
-    res.status(500).json({ error: 'Falha ao buscar ofertas de voos.', details: error.description });
+    // Log do erro completo no servidor para depuração
+    console.error("Erro detalhado na busca da Amadeus:", error);
+
+    // Envia uma resposta de erro mais informativa para o frontend
+    if (error.response) {
+      // Erro vindo da API da Amadeus
+      res.status(error.response.statusCode || 500).json({ 
+        error: 'Falha na comunicação com a API de voos.', 
+        details: error.description 
+      });
+    } else {
+      // Outros erros (ex: rede)
+      res.status(500).json({ 
+        error: 'Erro interno no servidor.', 
+        details: error.message 
+      });
+    }
   }
 });
-
 
 // --- INICIALIZAÇÃO DO SERVIDOR ---
 app.listen(port, () => {
