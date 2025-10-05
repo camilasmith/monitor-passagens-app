@@ -1,77 +1,66 @@
-// --- BIBLIOTECAS NECESSÁRIAS ---
-const express = require('express');
-const Amadeus = require('amadeus');
-const cors = require('cors');
 require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const Amadeus = require('amadeus');
 
-// --- CONFIGURAÇÃO INICIAL DO SERVIDOR ---
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 10000;
 
-app.use(cors());
+// --- CONFIGURAÇÃO DO CORS (A CORREÇÃO ESTÁ AQUI) ---
+// Define qual site tem permissão para acessar este servidor.
+const allowedOrigins = ['https://sr-monitor-de-voos.onrender.com'];
 
-// --- ROTA DE TESTE ---
-// 👉 Se acessar https://SEU-APP.onrender.com/api/ping
-// Deve responder { status: "ok", msg: "Servidor rodando no Render!" }
-app.get('/api/ping', (req, res) => {
-  res.json({ status: "ok", msg: "Servidor rodando no Render!" });
-});
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Permite requisições sem 'origin' (como apps mobile ou Postman) e da nossa origem permitida
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Não permitido pela política de CORS'));
+    }
+  }
+};
 
-// --- VALIDAÇÃO DAS CHAVES DA API ---
-if (!process.env.AMADEUS_API_KEY || !process.env.AMADEUS_API_SECRET) {
-  console.error("ERRO: As chaves da API da Amadeus (AMADEUS_API_KEY e AMADEUS_API_SECRET) não foram encontradas.");
-  process.exit(1);
-}
+// Aplica o middleware do CORS com as opções definidas
+app.use(cors(corsOptions));
 
-// --- CONEXÃO COM A AMADEUS ---
-// 🔑 Sandbox (troque para 'production' se tiver credenciais aprovadas)
+
+// --- CONFIGURAÇÃO DO AMADEUS ---
 const amadeus = new Amadeus({
   clientId: process.env.AMADEUS_API_KEY,
-  clientSecret: process.env.AMADEUS_API_SECRET,
-  hostname: 'test'
+  clientSecret: process.env.AMADEUS_API_SECRET
 });
 
-// --- ROTA DE BUSCA DE VOOS ---
+// --- ROTA DA API ---
 app.get('/api/search-flights', async (req, res) => {
   const { origin, destination, departureDate } = req.query;
 
   if (!origin || !destination || !departureDate) {
-    return res.status(400).json({ error: 'Origem, destino e data de partida são obrigatórios.' });
+    return res.status(400).json({ error: 'Parâmetros origin, destination e departureDate são obrigatórios.' });
   }
 
   try {
-    console.log(`Buscando voos de ${origin} para ${destination} em ${departureDate}...`);
-
     const response = await amadeus.shopping.flightOffersSearch.get({
       originLocationCode: origin,
       destinationLocationCode: destination,
       departureDate: departureDate,
       adults: '1',
-      max: 10,
-      currencyCode: 'BRL'
+      nonStop: false,
+      max: 20 // Limita o número de resultados para agilizar
     });
-
-    const formattedOffers = response.data.map(offer => ({
-      id: offer.id,
-      price: offer.price.total,
-      airline: offer.validatingAirlineCodes[0]
-    }));
-
-    res.json(formattedOffers);
+    
+    // A Amadeus pode retornar um objeto com uma propriedade 'data' ou a resposta direta
+    res.json(response.result || response.data);
 
   } catch (error) {
-    console.error("Erro na chamada da API Amadeus:", error.description || error.message);
-    res.status(500).json({
-      error: 'Erro ao buscar voos na Amadeus.',
-      details: error.description || error.message
-    });
+    console.error("Erro na busca da Amadeus:", error.response ? error.response.body : error.message);
+    res.status(500).json({ error: 'Falha ao buscar ofertas de voos.', details: error.description });
   }
 });
 
-// --- INICIA SERVIDOR ---
+
+// --- INICIALIZAÇÃO DO SERVIDOR ---
 app.listen(port, () => {
   console.log(`Servidor seguro rodando na porta ${port}. Pronto para receber buscas!`);
 });
-
-
 
