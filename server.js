@@ -18,7 +18,6 @@ const amadeus = new Amadeus({
   clientSecret: process.env.AMADEUS_API_SECRET
 });
 
-// ROTA UNIFICADA E INTELIGENTE PARA BUSCAS
 app.get('/api/search-flights', async (req, res) => {
   const { origin, destination, departureDate, returnDate } = req.query;
 
@@ -26,7 +25,7 @@ app.get('/api/search-flights', async (req, res) => {
     return res.status(400).json({ error: 'O parâmetro de origem é obrigatório.' });
   }
 
-  // --- MODO 1: BUSCA DE ROTA ESPECÍFICA (se o destino for fornecido) ---
+  // --- MODO 1: BUSCA DE ROTA ESPECÍFICA ---
   if (destination) {
       try {
         const searchParams = {
@@ -43,7 +42,7 @@ app.get('/api/search-flights', async (req, res) => {
           searchParams.returnDate = returnDate;
         }
         
-        console.log(`Buscando voo:`, searchParams);
+        console.log(`Buscando voo específico:`, searchParams);
         const response = await amadeus.shopping.flightOffersSearch.get(searchParams);
         return res.json(response.result || response.data);
 
@@ -52,16 +51,16 @@ app.get('/api/search-flights', async (req, res) => {
         return res.status(500).json({ error: 'Falha ao buscar ofertas de voos.', details: error.description });
       }
   } 
-  // --- MODO 2: EXPLORAR OFERTAS (se o destino NÃO for fornecido) ---
+  // --- MODO 2: EXPLORAR OFERTAS ---
   else {
       try {
-        // CORREÇÃO APLICADA AQUI: O parâmetro correto é 'origin'
         const searchParams = {
             origin: origin, 
             maxPrice: 5000 
         };
+        // CORREÇÃO: A API de exploração prefere o formato YYYY-MM para datas.
         if (departureDate) {
-            searchParams.departureDate = departureDate;
+            searchParams.departureDate = departureDate.substring(0, 7); // Extrai apenas 'YYYY-MM'
         }
 
         console.log(`Explorando ofertas a partir de:`, searchParams);
@@ -74,7 +73,6 @@ app.get('/api/search-flights', async (req, res) => {
       }
   }
 });
-
 
 app.listen(port, () => {
   console.log(`Servidor seguro rodando na porta ${port}.`);
