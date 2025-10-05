@@ -141,7 +141,6 @@
                 
                 if (destination) params.append('destination', destination);
                 if (departureDate) params.append('departureDate', departureDate);
-                // Apenas envia returnDate se ele tiver um valor e se for uma busca específica
                 if (returnDate && destination) params.append('returnDate', returnDate);
                 
                 const endpoint = isExploreMode ? '/api/explore-deals' : '/api/search-flights';
@@ -192,14 +191,58 @@
         }
 
         function renderExploreCard(dealData) { /* ...código existente... */ }
-        function renderSettingsPanel() { /* ...código existente... */ }
-        function saveAirlinesDataToLocalStorage() { /* ...código existente... */ }
-        function loadAirlinesDataFromLocalStorage() { /* ...código existente... */ }
+        function renderSettingsPanel() {
+            elements['mile-value-inputs'].innerHTML = Object.entries(airlinesData).map(([code, data]) => `
+                <div class="flex flex-col">
+                    <label for="mile-value-${code}" class="text-sm font-medium text-slate-300 mb-1">${data.program} (${code})</label>
+                    <input type="number" step="0.1" id="mile-value-${code}" data-code="${code}" value="${data.mileValue}" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 focus:ring-brand-500 focus:border-brand-500">
+                </div>
+            `).join('');
+        }
+        function saveAirlinesDataToLocalStorage() { localStorage.setItem('customAirlinesData', JSON.stringify(airlinesData)); }
+        function loadAirlinesDataFromLocalStorage() { const saved = localStorage.getItem('customAirlinesData'); if (saved) airlinesData = {...defaultAirlinesData, ...JSON.parse(saved)}; }
         
         elements['search-form'].addEventListener('submit', (e) => { e.preventDefault(); const origin = document.getElementById('origin').value.toUpperCase().trim(); const dest = document.getElementById('destination').value.toUpperCase().trim(); const depDate = document.getElementById('departureDate').value; const retDate = document.getElementById('returnDate').value; if (origin) handleSearch(origin, dest, depDate, retDate); });
         
-        // --- Código de navegação e inicialização sem alterações
-        document.addEventListener('DOMContentLoaded', () => { /* ... */ });
+        const navButtons = [elements['nav-search'], elements['nav-alerts'], elements['nav-settings']];
+        const panels = [elements['panel-search-results'], elements['panel-my-alerts'], elements['panel-settings']];
+        
+        navButtons.forEach((button, index) => {
+            if (!button) return;
+            button.addEventListener('click', () => {
+                navButtons.forEach(btn => btn && btn.classList.remove('active'));
+                button.classList.add('active');
+                
+                panels.forEach(panel => panel && panel.classList.add('hidden'));
+                if (panels[index]) panels[index].classList.remove('hidden');
+
+                elements['feed-placeholder'].style.display = (button.id !== 'nav-search' || elements['panel-search-results'].innerHTML !== '') ? 'none' : 'block';
+                
+                const titles = {'nav-search': 'Resultados da Busca', 'nav-alerts': 'Meus Alertas', 'nav-settings': 'Configurar Custo do Milheiro'};
+                elements['main-title'].textContent = titles[button.id] || 'Resultados';
+                elements['results-count'].style.display = (button.id === 'nav-search') ? 'inline' : 'none';
+
+                if (button.id === 'nav-settings') renderSettingsPanel();
+            });
+        });
+        
+        if(elements['settings-form']) {
+            elements['settings-form'].addEventListener('submit', (e) => {
+                e.preventDefault();
+                const inputs = elements['mile-value-inputs'].querySelectorAll('input');
+                inputs.forEach(input => {
+                    const code = input.dataset.code;
+                    const value = parseFloat(input.value);
+                    if (airlinesData[code] && !isNaN(value)) airlinesData[code].mileValue = value;
+                });
+                saveAirlinesDataToLocalStorage();
+                alert('Custos do milheiro salvos com sucesso!');
+            });
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAirlinesDataFromLocalStorage();
+            if (elements['nav-search']) elements['nav-search'].click();
+        });
     </script>
 </body>
 </html>
