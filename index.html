@@ -86,9 +86,8 @@
                 </div>
             </header>
 
-            <div id="panel-search-results" class="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-6">
-                <p id="feed-placeholder" class="text-center text-slate-500 col-span-full pt-16">Use o painel à esquerda para buscar uma rota.</p>
-            </div>
+            <div id="panel-search-results" class="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-6"></div>
+            <p id="feed-placeholder" class="text-center text-slate-500 col-span-full pt-16">Use o painel à esquerda para buscar uma rota.</p>
             <div id="panel-my-alerts" class="hidden space-y-4"></div>
         </main>
     </div>
@@ -116,6 +115,8 @@
         ['nav-search', 'nav-alerts', 'search-form', 'main-title', 'panel-search-results', 'panel-my-alerts', 'create-alert-btn', 'alert-modal', 'close-modal-btn', 'confirm-alert-btn', 'alert-summary', 'status-text', 'status-indicator', 'feed-placeholder', 'results-count'].forEach(id => elements[id] = document.getElementById(id));
         
         let myAlerts = [];
+        
+        const airlinesData = { 'G3': { name: 'GOL' }, 'LA': { name: 'LATAM' }, 'AD': { name: 'Azul' }, 'TP': { name: 'TAP Air Portugal' }, 'UA': { name: 'United' }, 'CM': { name: 'Copa' }, 'LH': { name: 'Lufthansa' }, 'AV': { name: 'Avianca' }, 'DL': { name: 'Delta' }, 'AF': { name: 'Air France' }, 'KL': { name: 'KLM' }, 'AM': { name: 'Aeromexico' }, 'AA': { name: 'American' }, 'IB': { name: 'Iberia' }, 'BA': { name: 'British Airways' }, 'EK': { name: 'Emirates' }, 'QR': { name: 'Qatar Airways' } };
 
         function updateStatus(message, color = 'gray') {
             if (elements['status-text']) elements['status-text'].textContent = message;
@@ -139,9 +140,9 @@
                 const responseData = await response.json();
                 
                 let offers = [];
-                if (Array.isArray(responseData)) { // Handle direct array response
+                if (Array.isArray(responseData)) {
                     offers = responseData;
-                } else if (responseData && Array.isArray(responseData.data)) { // Handle object with data array
+                } else if (responseData && Array.isArray(responseData.data)) {
                     offers = responseData.data;
                 }
 
@@ -165,15 +166,23 @@
         function renderFlightCard(flightData) {
             try {
                 const { price, itineraries, validatingAirlineCodes } = flightData;
-                const originCode = itineraries[0].segments[0].departure.iataCode;
-                const destinationCode = itineraries[0].segments[itineraries[0].segments.length - 1].arrival.iataCode;
-                const promoUrl = `https://www.google.com/flights#flt=${originCode}.${destinationCode}.${new Date().toISOString().split('T')[0]}`;
+                const airlineCode = validatingAirlineCodes[0];
+                const airlineInfo = airlinesData[airlineCode] || { name: airlineCode };
+                const firstSegment = itineraries[0].segments[0];
+                const lastSegment = itineraries[0].segments[itineraries[0].segments.length - 1];
+                const originCode = firstSegment.departure.iataCode;
+                const destinationCode = lastSegment.arrival.iataCode;
+                const departureDate = new Date(firstSegment.departure.at).toLocaleDateString('pt-BR');
+                const promoUrl = `https://www.google.com/flights#flt=${originCode}.${destinationCode}.${new Date(firstSegment.departure.at).toISOString().split('T')[0]}`;
 
                 return `
                     <div class="card-item bg-slate-900 border border-slate-800 rounded-2xl shadow-lg flex flex-col">
                         <div class="p-5">
                             <div class="flex justify-between items-center">
-                                <span class="text-sm font-semibold text-slate-300">${validatingAirlineCodes[0]}</span>
+                                <div class="flex items-center gap-2">
+                                    <img src="https://logo.clearbit.com/${airlineInfo.name.toLowerCase().replace(/\s/g, '')}.com" onerror="this.style.display='none'" class="h-6 w-6 rounded-full bg-slate-700"/>
+                                    <span class="text-sm font-semibold text-slate-300">${airlineInfo.name}</span>
+                                </div>
                                 <span class="text-xs font-semibold uppercase px-2 py-1 rounded-full bg-slate-800 text-slate-400">Econômica</span>
                             </div>
                             <div class="my-4 text-center">
@@ -182,6 +191,7 @@
                                     <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500"></i>
                                     <span>${destinationCode}</span>
                                 </div>
+                                <div class="text-sm text-slate-400 mt-1">Data: ${departureDate}</div>
                             </div>
                             <div class="bg-slate-800/50 rounded-lg p-3 text-center">
                                 <div class="text-xl text-white font-bold">R$ ${parseFloat(price.total).toFixed(2)}</div>
@@ -222,7 +232,6 @@
             if (savedAlerts) myAlerts = JSON.parse(savedAlerts);
         }
         
-        // --- EVENTOS ---
         elements['search-form'].addEventListener('submit', (e) => {
             e.preventDefault();
             const origin = document.getElementById('origin').value.toUpperCase().trim();
@@ -237,7 +246,8 @@
              elements['panel-my-alerts'].classList.add('hidden');
              elements['nav-search'].classList.add('active');
              elements['nav-alerts'].classList.remove('active');
-             renderMyAlerts(); // Atualiza a contagem visualmente
+             elements['results-count'].textContent = '';
+             elements['panel-search-results'].innerHTML = '';
         });
 
         elements['nav-alerts'].addEventListener('click', () => {
@@ -283,7 +293,6 @@
             }
         });
 
-        // --- INICIALIZAÇÃO ---
         document.addEventListener('DOMContentLoaded', () => {
             loadAlertsFromLocalStorage();
             elements['nav-search'].click();
