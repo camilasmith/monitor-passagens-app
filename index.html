@@ -76,15 +76,19 @@
         <!-- Conteúdo Principal -->
         <main class="flex-1 p-6 lg:p-8 overflow-y-auto flex flex-col">
             <header class="flex justify-between items-center mb-6">
-                 <h2 id="main-title" class="text-3xl font-bold text-white">Resultados da Busca</h2>
+                 <div>
+                    <h2 id="main-title" class="text-3xl font-bold text-white">Resultados da Busca</h2>
+                    <span id="results-count" class="text-sm font-medium text-slate-400"></span>
+                 </div>
                  <div class="flex items-center gap-2 text-sm text-slate-400">
                     <div id="status-indicator"></div>
                     <span id="status-text">Pronto para buscar.</span>
                 </div>
             </header>
 
-            <div id="panel-search-results" class="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-6"></div>
-            <p id="feed-placeholder" class="text-center text-slate-500 col-span-full pt-16">Use o painel à esquerda para buscar uma rota.</p>
+            <div id="panel-search-results" class="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-6">
+                <p id="feed-placeholder" class="text-center text-slate-500 col-span-full pt-16">Use o painel à esquerda para buscar uma rota.</p>
+            </div>
             <div id="panel-my-alerts" class="hidden space-y-4"></div>
         </main>
     </div>
@@ -109,7 +113,7 @@
         const API_BASE_URL = 'https://monitor-passagens-server.onrender.com';
         
         const elements = {};
-        ['nav-search', 'nav-alerts', 'search-form', 'main-title', 'panel-search-results', 'panel-my-alerts', 'create-alert-btn', 'alert-modal', 'close-modal-btn', 'confirm-alert-btn', 'alert-summary', 'status-text', 'status-indicator', 'feed-placeholder'].forEach(id => elements[id] = document.getElementById(id));
+        ['nav-search', 'nav-alerts', 'search-form', 'main-title', 'panel-search-results', 'panel-my-alerts', 'create-alert-btn', 'alert-modal', 'close-modal-btn', 'confirm-alert-btn', 'alert-summary', 'status-text', 'status-indicator', 'feed-placeholder', 'results-count'].forEach(id => elements[id] = document.getElementById(id));
         
         let myAlerts = [];
 
@@ -133,12 +137,17 @@
                 if (!response.ok) throw new Error(`API Error: ${response.status}`);
                 
                 const responseData = await response.json();
-                const offers = responseData.data;
+                
+                let offers = [];
+                if (Array.isArray(responseData)) { // Handle direct array response
+                    offers = responseData;
+                } else if (responseData && Array.isArray(responseData.data)) { // Handle object with data array
+                    offers = responseData.data;
+                }
 
-                if (!offers || offers.length === 0) {
+                if (offers.length === 0) {
                     updateStatus(`Nenhuma oferta encontrada.`, 'gray');
-                    elements['feed-placeholder'].textContent = `Nenhuma oferta encontrada para ${origin}→${destination}.`;
-                    elements['feed-placeholder'].style.display = 'block';
+                    elements['panel-search-results'].innerHTML = `<p class="text-center text-slate-500 col-span-full pt-16">Nenhuma oferta encontrada para ${origin}→${destination}.</p>`;
                     return;
                 }
                 
@@ -184,10 +193,7 @@
                         </div>
                     </div>
                 `;
-            } catch (e) {
-                console.error("Erro ao renderizar card:", flightData, e);
-                return '';
-            }
+            } catch (e) { return ''; }
         }
         
         function renderMyAlerts() {
@@ -213,9 +219,7 @@
 
         function loadAlertsFromLocalStorage() {
             const savedAlerts = localStorage.getItem('monitorGlobalAlerts');
-            if (savedAlerts) {
-                myAlerts = JSON.parse(savedAlerts);
-            }
+            if (savedAlerts) myAlerts = JSON.parse(savedAlerts);
         }
         
         // --- EVENTOS ---
@@ -223,9 +227,7 @@
             e.preventDefault();
             const origin = document.getElementById('origin').value.toUpperCase().trim();
             const destination = document.getElementById('destination').value.toUpperCase().trim();
-            if (origin && destination) {
-                handleSearch(origin, destination);
-            }
+            if (origin && destination) handleSearch(origin, destination);
         });
         
         elements['nav-search'].addEventListener('click', () => {
@@ -235,6 +237,7 @@
              elements['panel-my-alerts'].classList.add('hidden');
              elements['nav-search'].classList.add('active');
              elements['nav-alerts'].classList.remove('active');
+             renderMyAlerts(); // Atualiza a contagem visualmente
         });
 
         elements['nav-alerts'].addEventListener('click', () => {
@@ -268,11 +271,13 @@
                  saveAlertsToLocalStorage();
             }
             elements['alert-modal'].classList.add('hidden');
+            alert('Alerta criado com sucesso! Ele aparecerá na aba "Meus Alertas".');
         });
 
         elements['panel-my-alerts'].addEventListener('click', (e) => {
-            if (e.target.closest('.remove-alert-btn')) {
-                myAlerts.splice(e.target.closest('.remove-alert-btn').dataset.index, 1);
+            const removeBtn = e.target.closest('.remove-alert-btn');
+            if (removeBtn) {
+                myAlerts.splice(removeBtn.dataset.index, 1);
                 saveAlertsToLocalStorage();
                 renderMyAlerts();
             }
@@ -286,6 +291,4 @@
     </script>
 </body>
 </html>
-
-
 
